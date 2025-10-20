@@ -1,0 +1,16 @@
+[package]
+name = "app-central"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+dotenvy = "0.15.7"
+rocket = { version = "0.5.1", features = ["json"] }
+rocket_db_pools = { version = "0.2.0", features = ["sqlx", "sqlx_postgres"] }
+serde = { version = "1.0.228", features = ["derive"] }
+
+
+[dependencies.sqlx]
+version = "0.7"
+default-features = false
+features = ["macros", "migrate"]
