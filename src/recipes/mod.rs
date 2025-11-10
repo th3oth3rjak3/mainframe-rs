@@ -6,3 +6,6 @@ pub use models::*;
 
 pub mod service;
 pub use service::*;
+
+pub mod repository;
+pub use repository::*;

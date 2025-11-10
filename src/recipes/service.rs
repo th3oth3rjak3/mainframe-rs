@@ -1,38 +1,52 @@
 // src/recipes/service.rs
 use crate::errors::ApiError;
-use crate::recipes::{Ingredient, Instruction, Recipe, RecipeBase};
-use sqlx::PgPool;
+use crate::recipes::{IngredientRepository, InstructionRepository, Recipe, RecipeRepository};
 use std::collections::HashMap;
+use std::sync::Arc;
+
+type RecipeRepoImpl = Arc<dyn RecipeRepository + Send + Sync>;
+type IngredientRepoImpl = Arc<dyn IngredientRepository + Send + Sync>;
+type InstructionRepoImpl = Arc<dyn InstructionRepository + Send + Sync>;
 
 #[derive(Clone)]
 pub struct RecipeService {
-    pool: PgPool,
+    recipe_repo: RecipeRepoImpl,
+    ingredient_repo: IngredientRepoImpl,
+    instruction_repo: InstructionRepoImpl,
 }
 
 impl RecipeService {
-    pub fn new(pool: PgPool) -> Self {
-        Self { pool }
+    pub fn new(
+        recipe_repo: RecipeRepoImpl,
+        ingredient_repo: IngredientRepoImpl,
+        instruction_repo: InstructionRepoImpl,
+    ) -> Self {
+        Self {
+            recipe_repo,
+            ingredient_repo,
+            instruction_repo,
+        }
     }
 
     /// Get all recipes with ingredients and instructions
     pub async fn get_all(&self) -> Result<Vec<Recipe>, ApiError> {
         // Fetch base recipes
-        let recipe_bases = sqlx::query_as!(
-            RecipeBase,
-            "SELECT id, name, author, description, difficulty, estimated_duration FROM recipes.recipes")
-        .fetch_all(&self.pool)
-        .await
-        .map_err(ApiError::from)?;
-
-        // Fetch ingredients
-        let ingredients = sqlx::query_as!(Ingredient, "SELECT * FROM recipes.ingredients")
-            .fetch_all(&self.pool)
+        let recipe_bases = self
+            .recipe_repo
+            .get_all_bases()
             .await
             .map_err(ApiError::from)?;
 
-        // Fetch instructions
-        let instructions = sqlx::query_as!(Instruction, "SELECT * FROM recipes.instructions")
-            .fetch_all(&self.pool)
+        let ids = recipe_bases.iter().map(|r| r.id).collect::<Vec<_>>();
+        let ingredients = self
+            .ingredient_repo
+            .get_all_by_recipe_ids(&ids)
+            .await
+            .map_err(ApiError::from)?;
+
+        let instructions = self
+            .instruction_repo
+            .get_all_by_recipe_ids(&ids)
             .await
             .map_err(ApiError::from)?;
 

@@ -1,4 +1,5 @@
 use serde::{Deserialize, Serialize};
+use sqlx::prelude::FromRow;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Recipe {
@@ -22,7 +23,7 @@ pub struct RecipeBase {
     pub estimated_duration: Option<String>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, FromRow)]
 pub struct Ingredient {
     pub id: i32,
     pub recipe_id: i32,
@@ -30,7 +31,7 @@ pub struct Ingredient {
     pub description: String,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, FromRow)]
 pub struct Instruction {
     pub id: i32,
     pub recipe_id: i32,
