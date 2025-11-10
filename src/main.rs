@@ -1,43 +1,40 @@
-use rocket::{
-    Build, Rocket,
-    fairing::{self, AdHoc},
-    fs::FileServer,
-};
-use rocket_db_pools::Database;
-
-use crate::database::AppCentralDb;
-
-#[macro_use]
-extern crate rocket;
-
-extern crate rocket_db_pools;
-
 mod database;
 mod errors;
 mod recipes;
+mod services;
 
-#[launch]
-async fn rocket() -> _ {
-    dotenvy::dotenv().ok();
+use axum::Router;
+use database::Database;
+use dotenvy::dotenv;
+use recipes::router as recipe_router;
+use services::ServiceContainer;
+use std::{net::SocketAddr, sync::Arc};
+use tokio::net::TcpListener;
+use tower_http::services::ServeDir;
+use tracing_subscriber::EnvFilter;
 
-    let migrations_fairing = AdHoc::try_on_ignite("SQLx Migrations", run_migrations);
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    dotenv().ok();
 
-    rocket::build()
-        .attach(AppCentralDb::init())
-        .attach(migrations_fairing)
-        .mount("/", FileServer::from("frontend"))
-        .mount("/api/recipes", recipes::routes())
-}
+    tracing_subscriber::fmt()
+        .with_env_filter(EnvFilter::from_default_env())
+        .init();
 
-async fn run_migrations(rocket: Rocket<Build>) -> fairing::Result {
-    match AppCentralDb::fetch(&rocket) {
-        Some(db) => match sqlx::migrate!().run(&**db).await {
-            Ok(_) => Ok(rocket),
-            Err(e) => {
-                error!("Failed to run database migrations: {}", e);
-                Err(rocket)
-            }
-        },
-        None => Err(rocket),
-    }
+    // Initialize DB and ServiceContainer
+    let db = Database::new().await?;
+    let container = Arc::new(ServiceContainer::new(db.pool.clone()));
+
+    let app = Router::new()
+        .nest("/api/recipes", recipe_router())
+        .fallback_service(ServeDir::new("frontend"))
+        .with_state(container.clone());
+
+    let addr = SocketAddr::from(([127, 0, 0, 1], 8080));
+    tracing::info!("Listening on http://{}", addr);
+
+    let listener = TcpListener::bind(addr).await?;
+    axum::serve(listener, app.into_make_service()).await?;
+
+    Ok(())
 }

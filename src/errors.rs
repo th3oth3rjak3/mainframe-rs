@@ -1,4 +1,5 @@
-use rocket::serde::json::Json;
+use axum::http::StatusCode;
+use axum::response::{IntoResponse, Response};
 use serde::Serialize;
 
 #[derive(Debug, Serialize)]
@@ -6,27 +7,46 @@ pub struct ErrorResponse {
     pub error: String,
 }
 
-#[allow(unused)]
-#[derive(Responder)]
+#[derive(Debug)]
 pub enum ApiError {
-    #[response(status = 404, content_type = "json")]
-    NotFound(Json<ErrorResponse>),
-
-    #[response(status = 400, content_type = "json")]
-    BadRequest(Json<ErrorResponse>),
-
-    #[response(status = 500, content_type = "json")]
-    Internal(Json<ErrorResponse>),
+    NotFound(ErrorResponse),
+    BadRequest(ErrorResponse),
+    Internal(ErrorResponse),
 }
 
 impl ApiError {
     pub fn internal(msg: impl Into<String>) -> Self {
-        ApiError::Internal(Json(ErrorResponse { error: msg.into() }))
+        ApiError::Internal(ErrorResponse { error: msg.into() })
+    }
+
+    pub fn not_found(msg: impl Into<String>) -> Self {
+        ApiError::NotFound(ErrorResponse { error: msg.into() })
+    }
+
+    pub fn bad_request(msg: impl Into<String>) -> Self {
+        ApiError::BadRequest(ErrorResponse { error: msg.into() })
     }
 }
 
 impl From<sqlx::Error> for ApiError {
-    fn from(value: sqlx::Error) -> Self {
-        ApiError::internal(value.to_string())
+    fn from(err: sqlx::Error) -> Self {
+        ApiError::internal(err.to_string())
+    }
+}
+
+// Convert to Axum response
+impl IntoResponse for ApiError {
+    fn into_response(self) -> Response {
+        let (status, body) = match self {
+            ApiError::NotFound(e) => (StatusCode::NOT_FOUND, serde_json::to_string(&e).unwrap()),
+            ApiError::BadRequest(e) => {
+                (StatusCode::BAD_REQUEST, serde_json::to_string(&e).unwrap())
+            }
+            ApiError::Internal(e) => (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                serde_json::to_string(&e).unwrap(),
+            ),
+        };
+        (status, body).into_response()
     }
 }
