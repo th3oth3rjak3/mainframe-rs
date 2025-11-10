@@ -1,4 +1,3 @@
-use std::collections::HashMap;
 use std::sync::Arc;
 
 use axum::Json;
@@ -8,6 +7,7 @@ use axum::routing::get;
 
 use crate::errors::ApiError;
 use crate::recipes::Recipe;
+use crate::recipes::RecipeService;
 use crate::services::ServiceContainer;
 
 pub fn router() -> Router<Arc<ServiceContainer>> {
@@ -15,8 +15,8 @@ pub fn router() -> Router<Arc<ServiceContainer>> {
 }
 
 pub async fn get_all_recipes(
-    State(container): State<Arc<ServiceContainer>>,
+    State(service): State<RecipeService>,
 ) -> Result<Json<Vec<Recipe>>, ApiError> {
-    let recipes = container.recipe_service().get_all().await?;
+    let recipes = service.get_all().await?;
     Ok(Json(recipes))
 }
