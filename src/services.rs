@@ -9,14 +9,12 @@ use std::sync::Arc;
 /// A container holding all shared services and resources for the app
 #[derive(Clone)]
 pub struct ServiceContainer {
-    pub pool: PgPool,
     pub recipe_service: RecipeService,
 }
 
 impl ServiceContainer {
     pub fn new(pool: PgPool) -> Self {
         Self {
-            pool: pool.clone(),
             recipe_service: ServiceContainer::make_recipe_service(pool.clone()),
         }
     }
