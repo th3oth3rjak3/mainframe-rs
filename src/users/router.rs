@@ -31,7 +31,7 @@ pub async fn get_all_users(
     _: AdminUser,
     State(container): State<ServiceContainer>,
 ) -> Result<Json<Vec<UserResponse>>, ApiError> {
-    let users = container.user_service.get_all().await?;
+    let users = container.user_service().get_all().await?;
     Ok(Json(users))
 }
 
@@ -41,7 +41,7 @@ pub async fn get_by_id(
     Path(id): Path<i32>,
     State(container): State<ServiceContainer>,
 ) -> Result<Json<UserResponse>, ApiError> {
-    let user = container.user_service.get_by_id(id).await?;
+    let user = container.user_service().get_by_id(id).await?;
     Ok(Json(user))
 }
 
@@ -51,7 +51,7 @@ pub async fn create_user(
     State(container): State<ServiceContainer>,
     Json(req): Json<CreateUserRequest>,
 ) -> Result<Json<UserResponse>, ApiError> {
-    let user = container.user_service.create(req).await?;
+    let user = container.user_service().create(req).await?;
     Ok(Json(user))
 }
 
@@ -62,7 +62,7 @@ pub async fn update_user(
     State(container): State<ServiceContainer>,
     Json(req): Json<UpdateUserRequest>,
 ) -> Result<Json<UserResponse>, ApiError> {
-    let user = container.user_service.update(id, req).await?;
+    let user = container.user_service().update(id, req).await?;
     Ok(Json(user))
 }
 
@@ -72,7 +72,7 @@ pub async fn update_self(
     State(container): State<ServiceContainer>,
     Json(req): Json<UpdateUserRequest>,
 ) -> Result<Json<UserResponse>, ApiError> {
-    let user = container.user_service.update(auth.user.id, req).await?;
+    let user = container.user_service().update(auth.user.id, req).await?;
     Ok(Json(user))
 }
 
@@ -82,7 +82,7 @@ pub async fn delete_user(
     Path(id): Path<i32>,
     State(container): State<ServiceContainer>,
 ) -> Result<(), ApiError> {
-    container.user_service.delete(id).await?;
+    container.user_service().delete(id).await?;
     Ok(())
 }
 
@@ -92,13 +92,16 @@ pub async fn login(
     Json(login): Json<LoginRequest>,
 ) -> Result<impl IntoResponse, ApiError> {
     // lazily delete expired sessions when someone tries to login
-    container.session_service.cleanup_expired_sessions().await?;
+    container
+        .session_service()
+        .cleanup_expired_sessions()
+        .await?;
 
     // verify login credentials and update last login timestamp
-    let user = container.user_service.login(login).await?;
+    let user = container.user_service().login(login).await?;
 
     // create login session
-    let session = container.session_service.create_session(user.id).await?;
+    let session = container.session_service().create_session(user.id).await?;
 
     // create cookie with session id
     let cookie = Cookie::build(("session_id", session.id.to_string()))
@@ -120,7 +123,7 @@ pub async fn logout(
     State(container): State<ServiceContainer>,
 ) -> Result<impl IntoResponse, ApiError> {
     container
-        .session_service
+        .session_service()
         .delete_session(auth.session.id)
         .await?;
 

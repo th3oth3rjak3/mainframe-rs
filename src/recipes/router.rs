@@ -14,10 +14,9 @@ pub fn router() -> Router<ServiceContainer> {
 
 pub async fn get_all_recipes(
     _: AuthUser,
-    State(module): State<ServiceContainer>,
+    State(container): State<ServiceContainer>,
 ) -> Result<Json<Vec<Recipe>>, ApiError> {
     // TODO: get recipes for the current user plus public ones
-    let service = module.recipe_service;
-    let recipes = service.get_all().await?;
+    let recipes = container.recipe_service().get_all().await?;
     Ok(Json(recipes))
 }

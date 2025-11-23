@@ -13,9 +13,9 @@ use std::sync::Arc;
 /// A container holding all shared services and resources for the app
 #[derive(Clone)]
 pub struct ServiceContainer {
-    pub recipe_service: Arc<dyn IRecipeService>,
-    pub user_service: Arc<dyn IUserService>,
-    pub session_service: Arc<dyn ISessionService>,
+    recipe_service: Arc<dyn IRecipeService>,
+    user_service: Arc<dyn IUserService>,
+    session_service: Arc<dyn ISessionService>,
 }
 
 impl ServiceContainer {

@@ -82,7 +82,7 @@ impl IUserService for UserService {
 
     async fn login(&self, request: LoginRequest) -> Result<UserResponse, ApiError> {
         let mut user = self.user_repo.get_by_username(&request.username).await?;
-        let is_valid = user.password.verify(&request.password.as_bytes());
+        let is_valid = user.password.verify(request.password.as_bytes());
         if is_valid {
             user.last_login = Some(OffsetDateTime::now_utc());
             self.user_repo.update(&user).await?;

@@ -36,7 +36,7 @@ where
             .ok_or(ApiError::unauthorized())?;
 
         let (session, user) = container
-            .session_service
+            .session_service()
             .get_session_with_user(session_id)
             .await
             .map_err(|_| ApiError::unauthorized())?
