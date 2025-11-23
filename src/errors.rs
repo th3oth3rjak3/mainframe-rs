@@ -21,6 +21,8 @@ pub enum ApiError {
     NotFound(ErrorResponse),
     BadRequest(ErrorResponse),
     Internal(ErrorResponse),
+    Unauthorized(ErrorResponse),
+    Forbidden(ErrorResponse),
 }
 
 impl ApiError {
@@ -35,6 +37,18 @@ impl ApiError {
     pub fn bad_request(msg: impl Into<String>) -> Self {
         ApiError::BadRequest(ErrorResponse { error: msg.into() })
     }
+
+    pub fn unauthorized() -> Self {
+        ApiError::Unauthorized(ErrorResponse {
+            error: "Unauthorized".into(),
+        })
+    }
+
+    pub fn forbidden() -> Self {
+        ApiError::Forbidden(ErrorResponse {
+            error: "Forbidden".into(),
+        })
+    }
 }
 
 impl Display for ApiError {
@@ -43,6 +57,8 @@ impl Display for ApiError {
             Self::NotFound(r) => f.write_str(&r.error),
             Self::BadRequest(r) => f.write_str(&r.error),
             Self::Internal(r) => f.write_str(&r.error),
+            Self::Unauthorized(r) => f.write_str(&r.error),
+            Self::Forbidden(r) => f.write_str(&r.error),
         }
     }
 }
@@ -54,6 +70,7 @@ impl From<RepositoryError> for ApiError {
                 tracing::error!("Database error: {e}");
                 ApiError::internal("Database error")
             }
+            RepositoryError::Unauthorized => ApiError::unauthorized(),
             RepositoryError::NotFound => ApiError::not_found("Not found"),
             RepositoryError::Validation(msg) => ApiError::bad_request(msg),
             RepositoryError::Other(msg) => {
@@ -71,6 +88,8 @@ impl IntoResponse for ApiError {
             ApiError::NotFound(e) => (StatusCode::NOT_FOUND, e.to_string()),
             ApiError::BadRequest(e) => (StatusCode::BAD_REQUEST, e.to_string()),
             ApiError::Internal(e) => (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()),
+            ApiError::Unauthorized(e) => (StatusCode::UNAUTHORIZED, e.to_string()),
+            ApiError::Forbidden(e) => (StatusCode::FORBIDDEN, e.to_string()),
         };
         (status, body).into_response()
     }
@@ -84,6 +103,9 @@ pub enum RepositoryError {
 
     #[error("not found")]
     NotFound,
+
+    #[error("not authorized")]
+    Unauthorized,
 
     #[error("validation error: {0}")]
     Validation(String),

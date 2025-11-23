@@ -1,10 +1,14 @@
 use std::sync::Arc;
 
 use async_trait::async_trait;
+use time::OffsetDateTime;
 
 use crate::{
     errors::ApiError,
-    users::{CreateUserRequest, IUserRepository, Password, UpdateUserRequest, User, UserResponse},
+    users::{
+        CreateUserRequest, IUserRepository, LoginRequest, Password, UpdateUserRequest, User,
+        UserResponse,
+    },
 };
 
 type UserRepoImpl = Arc<dyn IUserRepository + Send + Sync>;
@@ -16,6 +20,7 @@ pub trait IUserService: Send + Sync {
     async fn create(&self, request: CreateUserRequest) -> Result<UserResponse, ApiError>;
     async fn update(&self, id: i32, request: UpdateUserRequest) -> Result<UserResponse, ApiError>;
     async fn delete(&self, id: i32) -> Result<(), ApiError>;
+    async fn login(&self, request: LoginRequest) -> Result<UserResponse, ApiError>;
 }
 
 #[derive(Clone)]
@@ -61,6 +66,7 @@ impl IUserService for UserService {
         existing.last_name = request.last_name;
         existing.email = request.email;
         existing.username = request.username;
+        existing.is_admin = request.is_admin;
         if let Some(pw) = request.raw_password {
             existing.password = Password::new(&pw);
         }
@@ -72,5 +78,17 @@ impl IUserService for UserService {
     async fn delete(&self, id: i32) -> Result<(), ApiError> {
         self.user_repo.delete(id).await?;
         Ok(())
+    }
+
+    async fn login(&self, request: LoginRequest) -> Result<UserResponse, ApiError> {
+        let mut user = self.user_repo.get_by_username(&request.username).await?;
+        let is_valid = user.password.verify(&request.password.as_bytes());
+        if is_valid {
+            user.last_login = Some(OffsetDateTime::now_utc());
+            self.user_repo.update(&user).await?;
+            return Ok(user.into());
+        }
+
+        Err(ApiError::unauthorized())
     }
 }

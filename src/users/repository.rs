@@ -5,6 +5,7 @@ use sqlx::PgPool;
 #[async_trait::async_trait]
 pub trait IUserRepository {
     async fn get_by_id(&self, id: i32) -> Result<User, RepositoryError>;
+    async fn get_by_username(&self, username: &str) -> Result<User, RepositoryError>;
     async fn get_all(&self) -> Result<Vec<User>, RepositoryError>;
     async fn create(&self, user: &User) -> Result<i32, RepositoryError>;
     async fn update(&self, user: &User) -> Result<(), RepositoryError>;
@@ -31,6 +32,22 @@ impl IUserRepository for SqlxUserRepository {
         return Ok(user);
     }
 
+    async fn get_by_username(&self, username: &str) -> Result<User, RepositoryError> {
+        let maybe_user = sqlx::query_as!(
+            User,
+            "SELECT * FROM public.users WHERE LOWER(username) = LOWER($1)",
+            username
+        )
+        .fetch_optional(&self.pool)
+        .await?;
+
+        if let Some(user) = maybe_user {
+            Ok(user)
+        } else {
+            Err(RepositoryError::Unauthorized)
+        }
+    }
+
     async fn get_all(&self) -> Result<Vec<User>, RepositoryError> {
         let users = sqlx::query_as!(User, "SELECT * from public.users")
             .fetch_all(&self.pool)
@@ -41,15 +58,16 @@ impl IUserRepository for SqlxUserRepository {
 
     async fn create(&self, user: &User) -> Result<i32, RepositoryError> {
         let created = sqlx::query!(
-            r#"INSERT INTO public.users (first_name, last_name, email, username, password)
-            VALUES ($1, $2, $3, $4, $5)
+            r#"INSERT INTO public.users (first_name, last_name, email, username, password, is_admin)
+            VALUES ($1, $2, $3, $4, $5, $6)
             RETURNING id
             "#,
             user.first_name,
             user.last_name,
             user.email,
             user.username,
-            user.password.to_string()
+            user.password.to_string(),
+            user.is_admin
         )
         .fetch_one(&self.pool)
         .await?;
@@ -65,14 +83,18 @@ impl IUserRepository for SqlxUserRepository {
             last_name = $2,
             email = $3,
             username = $4,
-            password = $5
-            WHERE id = $6
+            password = $5,
+            is_admin = $6,
+            last_login = $7
+            WHERE id = $8
             "#,
             user.first_name,
             user.last_name,
             user.email,
             user.username,
             user.password.to_string(),
+            user.is_admin,
+            user.last_login,
             user.id
         )
         .execute(&self.pool)
