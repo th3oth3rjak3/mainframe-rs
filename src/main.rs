@@ -2,6 +2,7 @@ mod database;
 mod errors;
 mod recipes;
 mod services;
+mod users;
 
 use axum::Router;
 use database::Database;
@@ -12,6 +13,7 @@ use std::{net::SocketAddr, sync::Arc};
 use tokio::net::TcpListener;
 use tower_http::services::ServeDir;
 use tracing_subscriber::EnvFilter;
+use users::router as user_router;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -27,6 +29,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let app = Router::new()
         .nest("/api/recipes", recipe_router())
+        .nest("/api/users", user_router())
         .fallback_service(ServeDir::new("frontend"))
         .with_state(container.clone());
 

@@ -1,0 +1,26 @@
+meta {
+  name: Create New User
+  type: http
+  seq: 3
+}
+
+post {
+  url: http://localhost:8080/api/users
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "first_name": "Test",
+    "last_name": "User",
+    "email": "test.user@gmail.com",
+    "username": "test",
+    "raw_password": "test"
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

@@ -7,7 +7,7 @@ use axum::routing::get;
 
 use crate::errors::ApiError;
 use crate::recipes::Recipe;
-use crate::recipes::RecipeService;
+use crate::services::RecipeModule;
 use crate::services::ServiceContainer;
 
 pub fn router() -> Router<Arc<ServiceContainer>> {
@@ -15,8 +15,9 @@ pub fn router() -> Router<Arc<ServiceContainer>> {
 }
 
 pub async fn get_all_recipes(
-    State(service): State<RecipeService>,
+    State(module): State<RecipeModule>,
 ) -> Result<Json<Vec<Recipe>>, ApiError> {
+    let service = module.recipe_service;
     let recipes = service.get_all().await?;
     Ok(Json(recipes))
 }

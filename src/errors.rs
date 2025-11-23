@@ -10,6 +10,12 @@ pub struct ErrorResponse {
     pub error: String,
 }
 
+impl Display for ErrorResponse {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(&self.error)
+    }
+}
+
 #[derive(Debug)]
 pub enum ApiError {
     NotFound(ErrorResponse),
@@ -62,14 +68,9 @@ impl From<RepositoryError> for ApiError {
 impl IntoResponse for ApiError {
     fn into_response(self) -> Response {
         let (status, body) = match self {
-            ApiError::NotFound(e) => (StatusCode::NOT_FOUND, serde_json::to_string(&e).unwrap()),
-            ApiError::BadRequest(e) => {
-                (StatusCode::BAD_REQUEST, serde_json::to_string(&e).unwrap())
-            }
-            ApiError::Internal(e) => (
-                StatusCode::INTERNAL_SERVER_ERROR,
-                serde_json::to_string(&e).unwrap(),
-            ),
+            ApiError::NotFound(e) => (StatusCode::NOT_FOUND, e.to_string()),
+            ApiError::BadRequest(e) => (StatusCode::BAD_REQUEST, e.to_string()),
+            ApiError::Internal(e) => (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()),
         };
         (status, body).into_response()
     }

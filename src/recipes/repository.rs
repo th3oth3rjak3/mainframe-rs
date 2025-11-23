@@ -6,13 +6,13 @@ use async_trait::async_trait;
 use sqlx::PgPool;
 
 #[async_trait::async_trait]
-pub trait RecipeRepository {
+pub trait IRecipeRepository: Send + Sync {
     async fn get_all_bases(&self) -> Result<Vec<RecipeBase>, RepositoryError>;
     // async fn get_shared_with(&self, recipe_id: i32) -> Result<Vec<RecipeShare>, sqlx::Error>;
 }
 
 #[async_trait]
-pub trait IngredientRepository {
+pub trait IIngredientRepository: Send + Sync {
     async fn get_all_by_recipe_ids(
         &self,
         recipe_ids: &[i32],
@@ -20,7 +20,7 @@ pub trait IngredientRepository {
 }
 
 #[async_trait]
-pub trait InstructionRepository {
+pub trait IInstructionRepository: Send + Sync {
     async fn get_all_by_recipe_ids(
         &self,
         recipe_ids: &[i32],
@@ -38,7 +38,7 @@ impl SqlxRecipeRepository {
 }
 
 #[async_trait]
-impl RecipeRepository for SqlxRecipeRepository {
+impl IRecipeRepository for SqlxRecipeRepository {
     async fn get_all_bases(&self) -> Result<Vec<RecipeBase>, RepositoryError> {
         let recipes = sqlx::query_as!(RecipeBase, "SELECT * FROM recipes.recipes")
             .fetch_all(&self.pool)
@@ -81,7 +81,7 @@ impl SqlxIngredientRepository {
 }
 
 #[async_trait]
-impl IngredientRepository for SqlxIngredientRepository {
+impl IIngredientRepository for SqlxIngredientRepository {
     async fn get_all_by_recipe_ids(
         &self,
         recipe_ids: &[i32],
@@ -107,7 +107,7 @@ impl SqlxInstructionRepository {
 }
 
 #[async_trait]
-impl InstructionRepository for SqlxInstructionRepository {
+impl IInstructionRepository for SqlxInstructionRepository {
     async fn get_all_by_recipe_ids(
         &self,
         recipe_ids: &[i32],

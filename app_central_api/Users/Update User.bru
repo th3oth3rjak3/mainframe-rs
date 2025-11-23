@@ -1,0 +1,26 @@
+meta {
+  name: Update User
+  type: http
+  seq: 4
+}
+
+put {
+  url: http://localhost:8080/api/users/1
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "first_name": "Updated",
+    "last_name": "Userly",
+    "email": "test.user1@gmail.com",
+    "username": "test123",
+    "raw_password": "test123"
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

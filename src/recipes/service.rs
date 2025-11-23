@@ -1,25 +1,27 @@
-// src/recipes/service.rs
+use async_trait::async_trait;
+
 use crate::errors::ApiError;
-use crate::recipes::{IngredientRepository, InstructionRepository, Recipe, RecipeRepository};
+use crate::recipes::{IIngredientRepository, IInstructionRepository, IRecipeRepository, Recipe};
 use std::collections::HashMap;
 use std::sync::Arc;
 
-type RecipeRepoImpl = Arc<dyn RecipeRepository + Send + Sync>;
-type IngredientRepoImpl = Arc<dyn IngredientRepository + Send + Sync>;
-type InstructionRepoImpl = Arc<dyn InstructionRepository + Send + Sync>;
+#[async_trait]
+pub trait IRecipeService: Send + Sync {
+    async fn get_all(&self) -> Result<Vec<Recipe>, ApiError>;
+}
 
 #[derive(Clone)]
 pub struct RecipeService {
-    recipe_repo: RecipeRepoImpl,
-    ingredient_repo: IngredientRepoImpl,
-    instruction_repo: InstructionRepoImpl,
+    recipe_repo: Arc<dyn IRecipeRepository>,
+    ingredient_repo: Arc<dyn IIngredientRepository>,
+    instruction_repo: Arc<dyn IInstructionRepository>,
 }
 
 impl RecipeService {
     pub fn new(
-        recipe_repo: RecipeRepoImpl,
-        ingredient_repo: IngredientRepoImpl,
-        instruction_repo: InstructionRepoImpl,
+        recipe_repo: Arc<dyn IRecipeRepository>,
+        ingredient_repo: Arc<dyn IIngredientRepository>,
+        instruction_repo: Arc<dyn IInstructionRepository>,
     ) -> Self {
         Self {
             recipe_repo,
@@ -27,9 +29,12 @@ impl RecipeService {
             instruction_repo,
         }
     }
+}
 
+#[async_trait]
+impl IRecipeService for RecipeService {
     /// Get all recipes with ingredients and instructions
-    pub async fn get_all(&self) -> Result<Vec<Recipe>, ApiError> {
+    async fn get_all(&self) -> Result<Vec<Recipe>, ApiError> {
         // Fetch base recipes
         let recipe_bases = self
             .recipe_repo
@@ -108,7 +113,7 @@ mod tests {
     }
 
     #[async_trait]
-    impl RecipeRepository for MockRecipeRepository {
+    impl IRecipeRepository for MockRecipeRepository {
         async fn get_all_bases(&self) -> Result<Vec<RecipeBase>, RepositoryError> {
             if self.fail {
                 Err(RepositoryError::Other("forced recipe failure".into()))
@@ -124,7 +129,7 @@ mod tests {
     }
 
     #[async_trait]
-    impl IngredientRepository for MockIngredientRepository {
+    impl IIngredientRepository for MockIngredientRepository {
         async fn get_all_by_recipe_ids(
             &self,
             _recipe_ids: &[i32],
@@ -143,7 +148,7 @@ mod tests {
     }
 
     #[async_trait]
-    impl InstructionRepository for MockInstructionRepository {
+    impl IInstructionRepository for MockInstructionRepository {
         async fn get_all_by_recipe_ids(
             &self,
             _recipe_ids: &[i32],
