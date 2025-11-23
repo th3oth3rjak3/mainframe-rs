@@ -1,7 +1,9 @@
+mod auth;
 mod database;
 mod errors;
 mod recipes;
 mod services;
+mod sessions;
 mod users;
 
 use axum::Router;
@@ -9,7 +11,7 @@ use database::Database;
 use dotenvy::dotenv;
 use recipes::router as recipe_router;
 use services::ServiceContainer;
-use std::{net::SocketAddr, sync::Arc};
+use std::net::SocketAddr;
 use tokio::net::TcpListener;
 use tower_http::services::ServeDir;
 use tracing_subscriber::EnvFilter;
@@ -25,13 +27,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Initialize DB and ServiceContainer
     let db = Database::new().await?;
-    let container = Arc::new(ServiceContainer::new(db.pool.clone()));
+    let container = ServiceContainer::new(db.pool.clone());
 
     let app = Router::new()
         .nest("/api/recipes", recipe_router())
         .nest("/api/users", user_router())
         .fallback_service(ServeDir::new("frontend"))
-        .with_state(container.clone());
+        .with_state(container);
 
     let addr = SocketAddr::from(([127, 0, 0, 1], 8080));
     tracing::info!("Listening on http://{}", addr);

@@ -54,6 +54,7 @@ pub struct User {
     pub email: String,
     pub username: String,
     pub password: Password,
+    pub is_admin: bool,
     pub last_login: Option<OffsetDateTime>,
 }
 
@@ -64,6 +65,7 @@ pub struct CreateUserRequest {
     pub email: String,
     pub username: String,
     pub raw_password: String,
+    pub is_admin: bool,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -73,6 +75,7 @@ pub struct UpdateUserRequest {
     pub email: String,
     pub username: String,
     pub raw_password: Option<String>,
+    pub is_admin: bool,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -82,7 +85,9 @@ pub struct UserResponse {
     pub last_name: String,
     pub email: String,
     pub username: String,
+    #[serde(with = "time::serde::rfc3339::option")]
     pub last_login: Option<OffsetDateTime>,
+    pub is_admin: bool,
 }
 
 impl From<User> for UserResponse {
@@ -94,6 +99,7 @@ impl From<User> for UserResponse {
             email: user.email,
             username: user.username,
             last_login: user.last_login,
+            is_admin: user.is_admin,
         }
     }
 }
@@ -108,12 +114,24 @@ impl From<CreateUserRequest> for User {
             username: request.username,
             password: Password::new(&request.raw_password),
             last_login: None,
+            is_admin: request.is_admin,
         }
     }
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct LoginRequest {
+    pub username: String,
+    pub password: String,
+}
+
 #[cfg(test)]
 mod tests {
+    use argon2::{
+        Argon2,
+        password_hash::{PasswordHasher, SaltString, rand_core::OsRng},
+    };
+
     use crate::users::Password;
 
     #[test]
@@ -137,5 +155,16 @@ mod tests {
         let pw = Password::new(raw_pw);
         let valid = pw.verify(b"hunter123");
         assert!(!valid);
+    }
+
+    #[test]
+    fn generate_admin_password_hash() {
+        let password = b"admin";
+        let salt = SaltString::generate(&mut OsRng);
+        let argon2 = Argon2::default();
+        let password_hash = argon2.hash_password(password, &salt).unwrap().to_string();
+
+        println!("Admin password hash: {}", password_hash);
+        // Copy this hash to your migration
     }
 }

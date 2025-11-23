@@ -37,6 +37,11 @@
         "ordinal": 6,
         "name": "last_login",
         "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 7,
+        "name": "is_admin",
+        "type_info": "Bool"
       }
     ],
     "parameters": {
@@ -51,7 +56,8 @@
       false,
       false,
       false,
-      true
+      true,
+      false
     ]
   },
   "hash": "8b489f97180924bb49bd9beda87181c5080b84334df651a826be3f51ef6d567c"

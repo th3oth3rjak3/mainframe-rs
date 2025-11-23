@@ -3,39 +3,19 @@ use crate::{
         IRecipeService, RecipeService, SqlxIngredientRepository, SqlxInstructionRepository,
         SqlxRecipeRepository,
     },
+    sessions::{ISessionService, SessionService, SqlxSessionRepository},
     users::{IUserService, SqlxUserRepository, UserService},
 };
-use axum::extract::FromRef;
+
 use sqlx::PgPool;
 use std::sync::Arc;
-
-#[derive(Clone)]
-pub struct RecipeModule {
-    pub recipe_service: Arc<dyn IRecipeService>,
-}
-
-impl RecipeModule {
-    pub fn new(recipe_service: Arc<dyn IRecipeService>) -> Self {
-        Self { recipe_service }
-    }
-}
-
-#[derive(Clone)]
-pub struct UserModule {
-    pub user_service: Arc<dyn IUserService>,
-}
-
-impl UserModule {
-    pub fn new(user_service: Arc<dyn IUserService>) -> Self {
-        Self { user_service }
-    }
-}
 
 /// A container holding all shared services and resources for the app
 #[derive(Clone)]
 pub struct ServiceContainer {
     pub recipe_service: Arc<dyn IRecipeService>,
     pub user_service: Arc<dyn IUserService>,
+    pub session_service: Arc<dyn ISessionService>,
 }
 
 impl ServiceContainer {
@@ -43,6 +23,7 @@ impl ServiceContainer {
         Self {
             recipe_service: Arc::new(ServiceContainer::make_recipe_service(pool.clone())),
             user_service: Arc::new(ServiceContainer::make_user_service(pool.clone())),
+            session_service: Arc::new(ServiceContainer::make_session_service(pool.clone())),
         }
     }
 
@@ -68,16 +49,13 @@ impl ServiceContainer {
     pub fn user_service(&self) -> Arc<dyn IUserService> {
         self.user_service.clone()
     }
-}
 
-impl FromRef<Arc<ServiceContainer>> for RecipeModule {
-    fn from_ref(input: &Arc<ServiceContainer>) -> Self {
-        RecipeModule::new(input.recipe_service())
+    fn make_session_service(pool: PgPool) -> impl ISessionService {
+        let session_repo = Arc::new(SqlxSessionRepository::new(pool.clone()));
+        SessionService::new(session_repo)
     }
-}
 
-impl FromRef<Arc<ServiceContainer>> for UserModule {
-    fn from_ref(input: &Arc<ServiceContainer>) -> Self {
-        UserModule::new(input.user_service())
+    pub fn session_service(&self) -> Arc<dyn ISessionService> {
+        self.session_service.clone()
     }
 }
