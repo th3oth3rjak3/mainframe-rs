@@ -9,6 +9,8 @@ pub struct Recipe {
     pub description: Option<String>,
     pub difficulty: Option<String>,
     pub estimated_duration: Option<String>,
+    pub user_id: i32,
+    pub is_public: bool,
     pub ingredients: Vec<Ingredient>,
     pub instructions: Vec<Instruction>,
 }
@@ -21,6 +23,8 @@ pub struct RecipeBase {
     pub description: Option<String>,
     pub difficulty: Option<String>,
     pub estimated_duration: Option<String>,
+    pub user_id: i32,
+    pub is_public: bool,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, FromRow)]
@@ -48,8 +52,34 @@ impl From<RecipeBase> for Recipe {
             description: base.description,
             difficulty: base.difficulty,
             estimated_duration: base.estimated_duration,
+            user_id: base.user_id,
+            is_public: base.is_public,
             ingredients: vec![],
             instructions: vec![],
         }
     }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct RecipeRequest {
+    pub name: String,
+    pub author: Option<String>,
+    pub description: Option<String>,
+    pub difficulty: Option<String>,
+    pub estimated_duration: Option<String>,
+    pub is_public: bool,
+    pub ingredients: Vec<IngredientRequest>,
+    pub instructions: Vec<InstructionRequest>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct IngredientRequest {
+    pub position: i32,
+    pub description: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct InstructionRequest {
+    pub position: i32,
+    pub description: String,
 }

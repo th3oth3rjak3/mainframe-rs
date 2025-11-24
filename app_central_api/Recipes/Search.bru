@@ -1,0 +1,22 @@
+meta {
+  name: Search
+  type: http
+  seq: 1
+}
+
+get {
+  url: http://localhost:8080/api/recipes?page=1&page_size=20&q=COOKI
+  body: none
+  auth: inherit
+}
+
+params:query {
+  page: 1
+  page_size: 20
+  q: COOKI
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

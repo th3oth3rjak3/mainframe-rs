@@ -1,22 +1,76 @@
 use axum::Json;
 use axum::Router;
+use axum::extract::Query;
 use axum::extract::State;
 use axum::routing::get;
+use serde::{self, Deserialize};
 
 use crate::auth::AuthUser;
 use crate::errors::ApiError;
 use crate::recipes::Recipe;
 use crate::services::ServiceContainer;
+use crate::shared_models::PaginatedResponse;
 
-pub fn router() -> Router<ServiceContainer> {
-    Router::new().route("/", get(get_all_recipes))
+#[derive(Debug, Deserialize)]
+pub struct RecipeFilters {
+    #[serde(default = "default_page")]
+    pub page: i64,
+    #[serde(default = "default_page_size")]
+    pub page_size: i64,
+    pub q: Option<String>, // Filter by name
 }
 
+fn default_page() -> i64 {
+    1
+}
+fn default_page_size() -> i64 {
+    20
+}
+
+pub fn router() -> Router<ServiceContainer> {
+    Router::new()
+        .route("/", get(get_all_recipes).post(create_recipe))
+        .route(
+            "/{id}",
+            get(get_by_id).put(update_recipe).delete(delete_recipe),
+        )
+}
+
+#[axum::debug_handler]
 pub async fn get_all_recipes(
-    _: AuthUser,
+    auth: AuthUser,
     State(container): State<ServiceContainer>,
-) -> Result<Json<Vec<Recipe>>, ApiError> {
-    // TODO: get recipes for the current user plus public ones
-    let recipes = container.recipe_service().get_all().await?;
+    Query(filters): Query<RecipeFilters>,
+) -> Result<Json<PaginatedResponse<Recipe>>, ApiError> {
+    let recipes = container
+        .recipe_service()
+        .get_user_and_public_recipes(
+            auth.user.id,
+            filters.page,
+            filters.page_size,
+            filters.q.as_deref(),
+        )
+        .await?;
+
     Ok(Json(recipes))
+}
+
+#[axum::debug_handler]
+pub async fn create_recipe() -> Result<Json<Recipe>, ApiError> {
+    todo!()
+}
+
+#[axum::debug_handler]
+pub async fn get_by_id() -> Result<Json<Recipe>, ApiError> {
+    todo!()
+}
+
+#[axum::debug_handler]
+pub async fn update_recipe() -> Result<Json<Recipe>, ApiError> {
+    todo!()
+}
+
+#[axum::debug_handler]
+pub async fn delete_recipe() -> Result<Json<Recipe>, ApiError> {
+    todo!()
 }

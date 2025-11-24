@@ -7,8 +7,13 @@ use sqlx::PgPool;
 
 #[async_trait::async_trait]
 pub trait IRecipeRepository: Send + Sync {
-    async fn get_all_bases(&self) -> Result<Vec<RecipeBase>, RepositoryError>;
-    // async fn get_shared_with(&self, recipe_id: i32) -> Result<Vec<RecipeShare>, sqlx::Error>;
+    async fn get_user_and_public_recipes(
+        &self,
+        user_id: i32,
+        page: i64,
+        page_size: i64,
+        name_query: Option<&str>,
+    ) -> Result<(Vec<RecipeBase>, i64), RepositoryError>;
 }
 
 #[async_trait]
@@ -39,12 +44,42 @@ impl SqlxRecipeRepository {
 
 #[async_trait]
 impl IRecipeRepository for SqlxRecipeRepository {
-    async fn get_all_bases(&self) -> Result<Vec<RecipeBase>, RepositoryError> {
-        let recipes = sqlx::query_as!(RecipeBase, "SELECT * FROM recipes.recipes")
-            .fetch_all(&self.pool)
-            .await?;
+    async fn get_user_and_public_recipes(
+        &self,
+        user_id: i32,
+        page: i64,
+        page_size: i64,
+        name_query: Option<&str>,
+    ) -> Result<(Vec<RecipeBase>, i64), RepositoryError> {
+        let offset = (page - 1) * page_size;
 
-        Ok(recipes)
+        let total: i64 = sqlx::query_scalar!(
+            "SELECT COUNT(*) FROM recipes.recipes
+             WHERE (user_id = $1 OR is_public = true)
+               AND ($2::TEXT IS NULL OR name ILIKE '%' || $2 || '%')",
+            user_id,
+            name_query
+        )
+        .fetch_one(&self.pool)
+        .await?
+        .unwrap_or(0);
+
+        let recipes = sqlx::query_as!(
+            RecipeBase,
+            "SELECT * FROM recipes.recipes
+             WHERE (user_id = $1 OR is_public = true)
+               AND ($4::TEXT IS NULL OR name ILIKE '%' || $4 || '%')
+             ORDER BY name ASC
+             LIMIT $2 OFFSET $3",
+            user_id,
+            page_size.into(),
+            offset.into(),
+            name_query
+        )
+        .fetch_all(&self.pool)
+        .await?;
+
+        Ok((recipes, total))
     }
 
     // async fn get_shared_with_for_recipe_ids(

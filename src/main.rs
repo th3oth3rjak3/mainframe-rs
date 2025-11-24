@@ -4,6 +4,7 @@ mod errors;
 mod recipes;
 mod services;
 mod sessions;
+mod shared_models;
 mod users;
 
 use axum::Router;
