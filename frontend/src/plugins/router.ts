@@ -1,13 +1,19 @@
 import { createRouter, createWebHistory } from 'vue-router';
 import type { RouteRecordRaw } from 'vue-router';
 
-import Dashboard from '@/views/Dashboard.vue';
+import DashboardPage from '@/views/DashboardPage.vue';
+import LoginPage from '@/views/LoginPage.vue';
 
 const routes: RouteRecordRaw[] = [
     {
         path: '/',
         name: 'Dashboard',
-        component: Dashboard,
+        component: DashboardPage,
+    },
+    {
+        path: '/login',
+        name: 'Login',
+        component: LoginPage,
     },
     //   {
     //     path: '/recipes',

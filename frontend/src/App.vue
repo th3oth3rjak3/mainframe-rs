@@ -17,6 +17,9 @@
         <!-- <v-list-item link to="/passwords" title="Passwords" /> -->
         <v-divider />
         <v-list-item link to="/administration" title="Administration" />
+        <v-divider />
+        <v-list-item link to="/login" title="Login" />
+        <v-list-item link to="/logout" title="Logout" />
       </v-navigation-drawer>
       <router-view />
     </v-main>
