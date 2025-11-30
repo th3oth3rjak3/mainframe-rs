@@ -24,7 +24,10 @@ pub trait ISessionService: Send + Sync {
     async fn get_session_with_user(
         &self,
         session_id: Uuid,
-    ) -> Result<Option<(Session, UserResponse)>, ApiError>;
+    ) -> Result<(Session, UserResponse), ApiError>;
+
+    /// Refresh the session with a new cookie if the current session isn't yet expired.
+    async fn refresh_session(&self, session_id: Uuid) -> Result<(Session, UserResponse), ApiError>;
 }
 
 pub struct SessionService {
@@ -58,8 +61,19 @@ impl ISessionService for SessionService {
     async fn get_session_with_user(
         &self,
         session_id: Uuid,
-    ) -> Result<Option<(Session, UserResponse)>, ApiError> {
+    ) -> Result<(Session, UserResponse), ApiError> {
         let result = self.session_repo.get_session_with_user(session_id).await?;
         Ok(result)
+    }
+
+    async fn refresh_session(&self, session_id: Uuid) -> Result<(Session, UserResponse), ApiError> {
+        self.session_repo.delete_expired().await?;
+        let (session, user) = self.session_repo.get_session_with_user(session_id).await?;
+
+        let new_session = Session::new(user.id);
+        self.session_repo.create(&new_session).await?;
+        self.session_repo.delete(session.id).await?;
+
+        Ok((new_session, user))
     }
 }

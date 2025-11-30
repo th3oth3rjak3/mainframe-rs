@@ -21,6 +21,9 @@ import { Form, Field, type GenericObject } from 'vee-validate';
 import { LoginRequestSchema, useUserStore, type LoginRequest } from '@/stores/user';
 import { toTypedSchema } from '@vee-validate/valibot';
 import * as v from 'valibot';
+import { useRouter } from 'vue-router';
+
+const router = useRouter();
 
 const userStore = useUserStore();
 
@@ -35,5 +38,6 @@ async function onSubmit(values: GenericObject) {
     console.log('Form values:', values);
     const request: LoginRequest = v.parse(LoginRequestSchema, values);
     await userStore.login(request);
+    await router.replace("/")
 }
 </script>

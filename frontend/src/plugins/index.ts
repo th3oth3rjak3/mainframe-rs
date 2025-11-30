@@ -12,10 +12,15 @@ import { options, plugin } from './toasts';
 
 // Types
 import type { App } from 'vue'
+import { useUserStore } from '@/stores/user';
 
-export function registerPlugins(app: App) {
+export async function registerPlugins(app: App) {
   app.use(vuetify);
   app.use(pinia);
+
+  const userStore = useUserStore();
+  await userStore.hydrateUser();
+
   app.use(router);
   app.use(plugin, options);
 }

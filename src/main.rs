@@ -14,7 +14,7 @@ use recipes::router as recipe_router;
 use services::ServiceContainer;
 use std::net::SocketAddr;
 use tokio::net::TcpListener;
-use tower_http::services::ServeDir;
+use tower_http::services::{ServeDir, ServeFile};
 use tracing_subscriber::EnvFilter;
 use users::router as user_router;
 
@@ -33,7 +33,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let app = Router::new()
         .nest("/api/recipes", recipe_router())
         .nest("/api/users", user_router())
-        .fallback_service(ServeDir::new("static"))
+        .fallback_service(ServeDir::new("static").not_found_service(ServeFile::new("static/index.html")))
         .with_state(container);
 
     let addr = SocketAddr::from(([127, 0, 0, 1], 8080));

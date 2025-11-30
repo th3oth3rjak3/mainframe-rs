@@ -1,4 +1,5 @@
 import { defineStore } from 'pinia'
+import { isoDate } from '@/validation/date';
 
 import * as v from 'valibot';
 import { useToast } from 'vue-toastification';
@@ -9,7 +10,7 @@ const UserSchema = v.object({
     lastName: v.string(),
     email: v.string(),
     username: v.string(),
-    lastLogin: v.optional(v.date()),
+    lastLogin: v.nullable(isoDate()),
     isAdmin: v.boolean(),
 });
 
@@ -25,12 +26,15 @@ export type LoginRequest = v.InferOutput<typeof LoginRequestSchema>;
 export const useUserStore = defineStore('user', {
     state: () => ({
         currentUser: null as User | null,
-        isLoggedIn: false,
     }),
 
     getters: {
         userName: (state) => state.currentUser?.firstName,
-        userFullName: (state) => [state.currentUser?.lastName, state.currentUser?.firstName].join(', '),
+        userFullName: (state) => {
+            if (!state.currentUser) return '';
+            return `${state.currentUser.lastName}, ${state.currentUser.firstName}`;
+        },
+        isLoggedIn: (state) => state.currentUser !== null,
     },
 
     actions: {
@@ -57,7 +61,6 @@ export const useUserStore = defineStore('user', {
 
                 if (parseResult.success) {
                     this.currentUser = parseResult.output;
-                    this.isLoggedIn = true;
                     toast.success('Welcome back!');
                     return;
                 }
@@ -66,15 +69,39 @@ export const useUserStore = defineStore('user', {
             } catch (error) {
                 console.error('Login failed:', error)
                 toast.error('Server error. Please try again later.', { timeout: false });
-                this.isLoggedIn = false
                 this.currentUser = null
+            }
+        },
+        async hydrateUser() {
+            try {
+                const response = await fetch('/api/users/self', {
+                    method: 'GET',
+                    credentials: 'include',
+                });
+
+                if (!response.ok) {
+                    this.currentUser = null;
+                    return;
+                }
+
+                const data = await response.json();
+                const parseResult = v.safeParse(UserSchema, data);
+
+                if (parseResult.success) {
+                    this.currentUser = parseResult.output;
+                } else {
+                    console.error('Invalid user data from server');
+                    this.currentUser = null;
+                }
+            } catch (err) {
+                console.error('Failed to hydrate user:', err);
+                this.currentUser = null;
             }
         },
 
         logout() {
             // TODO: call the backend logout function to get rid of the current session.
             this.currentUser = null
-            this.isLoggedIn = false
         }
     }
 })

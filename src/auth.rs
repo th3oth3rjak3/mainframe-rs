@@ -39,8 +39,7 @@ where
             .session_service()
             .get_session_with_user(session_id)
             .await
-            .map_err(|_| ApiError::unauthorized())?
-            .ok_or_else(ApiError::unauthorized)?;
+            .map_err(|_| ApiError::unauthorized())?;
 
         Ok(Self { user, session })
     }

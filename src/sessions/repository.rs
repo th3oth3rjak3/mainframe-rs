@@ -20,7 +20,7 @@ pub trait ISessionRepository: Send + Sync {
     async fn get_session_with_user(
         &self,
         session_id: Uuid,
-    ) -> Result<Option<(Session, UserResponse)>, RepositoryError>;
+    ) -> Result<(Session, UserResponse), RepositoryError>;
 }
 
 pub struct SqlxSessionRepository {
@@ -70,7 +70,7 @@ impl ISessionRepository for SqlxSessionRepository {
     async fn get_session_with_user(
         &self,
         session_id: Uuid,
-    ) -> Result<Option<(Session, UserResponse)>, RepositoryError> {
+    ) -> Result<(Session, UserResponse), RepositoryError> {
         let row = sqlx::query!(
             r#"
             SELECT
@@ -95,6 +95,7 @@ impl ISessionRepository for SqlxSessionRepository {
 
         if let Some(row) = row {
             if row.expires_at < OffsetDateTime::now_utc() {
+                self.delete(session_id).await?;
                 Err(RepositoryError::Unauthorized)
             } else {
                 let user = UserResponse {
@@ -114,10 +115,10 @@ impl ISessionRepository for SqlxSessionRepository {
                     expires_at: row.expires_at,
                 };
 
-                Ok(Some((session, user)))
+                Ok((session, user))
             }
         } else {
-            Ok(None)
+            Err(RepositoryError::Unauthorized)
         }
     }
 }

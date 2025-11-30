@@ -21,7 +21,7 @@ pub fn router() -> Router<ServiceContainer> {
     Router::new()
         .route("/", get(get_all_users).post(create_user))
         .route("/{id}", get(get_by_id).put(update_user).delete(delete_user))
-        .route("/self", put(update_self))
+        .route("/self", put(update_self).get(get_self))
         .route("/login", post(login))
         .route("/logout", post(logout))
 }
@@ -41,6 +41,28 @@ pub async fn get_by_id(
 ) -> Result<Json<UserResponse>, ApiError> {
     let user = container.user_service().get_by_id(id).await?;
     Ok(Json(user))
+}
+
+pub async fn get_self(
+    auth: AuthUser,
+    State(container): State<ServiceContainer>,
+) -> Result<impl IntoResponse, ApiError> {
+    let (new_session, user) = container
+        .session_service()
+        .refresh_session(auth.session.id)
+        .await?;
+
+    let cookie = Cookie::build(("session_id", new_session.id.to_string()))
+        .path("/")
+        .http_only(true)
+        .secure(true)
+        .same_site(cookie::SameSite::Strict)
+        .max_age(Duration::days(1))
+        .build();
+
+    let jar = CookieJar::new().add(cookie);
+
+    Ok((jar, Json(user)))
 }
 
 pub async fn create_user(

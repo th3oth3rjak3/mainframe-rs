@@ -8,11 +8,11 @@
 
 <script setup lang="ts">
 export interface AppCardProps {
-    route: string,
-    title: string,
-    icon: string,
-    color?: string,
-    subtitle?: string,
+    route: string;
+    title: string;
+    icon: string;
+    color?: string;
+    subtitle?: string;
 };
 
 const props = defineProps<AppCardProps>();
