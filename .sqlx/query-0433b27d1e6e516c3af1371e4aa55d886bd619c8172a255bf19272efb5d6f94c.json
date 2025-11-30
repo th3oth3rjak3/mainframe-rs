@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT * FROM recipes.recipes",
+  "query": "SELECT * FROM recipes.recipes WHERE id = $1",
   "describe": {
     "columns": [
       {
@@ -32,10 +32,22 @@
         "ordinal": 5,
         "name": "estimated_duration",
         "type_info": "Text"
+      },
+      {
+        "ordinal": 6,
+        "name": "user_id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 7,
+        "name": "is_public",
+        "type_info": "Bool"
       }
     ],
     "parameters": {
-      "Left": []
+      "Left": [
+        "Int4"
+      ]
     },
     "nullable": [
       false,
@@ -43,8 +55,10 @@
       true,
       true,
       true,
-      true
+      true,
+      false,
+      false
     ]
   },
-  "hash": "b825ec36a0957b0f8d7eebaee7b6ced842e3d30d184b5f1fddd8adf8d2268ee5"
+  "hash": "0433b27d1e6e516c3af1371e4aa55d886bd619c8172a255bf19272efb5d6f94c"
 }
