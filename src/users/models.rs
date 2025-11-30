@@ -8,7 +8,7 @@ use serde::{Deserialize, Serialize};
 use sqlx::prelude::FromRow;
 use time::OffsetDateTime;
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, sqlx::Type)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, sqlx::Type)]
 #[sqlx(transparent)]
 pub struct Password(String);
 
@@ -20,13 +20,12 @@ impl Password {
             .hash_password(raw_password.as_bytes(), &salt)
             .unwrap();
 
-        Password(hash.to_string())
+        Self(hash.to_string())
     }
 
     pub fn verify(&self, candidate: &[u8]) -> bool {
-        let parsed_hash = match PasswordHash::new(&self.0) {
-            Ok(h) => h,
-            Err(_) => return false,
+        let Ok(parsed_hash) = PasswordHash::new(&self.0) else {
+            return false;
         };
 
         let argon2 = argon2::Argon2::default();
@@ -96,7 +95,7 @@ pub struct UserResponse {
 
 impl From<User> for UserResponse {
     fn from(user: User) -> Self {
-        UserResponse {
+        Self {
             id: user.id,
             first_name: user.first_name,
             last_name: user.last_name,
@@ -110,7 +109,7 @@ impl From<User> for UserResponse {
 
 impl From<CreateUserRequest> for User {
     fn from(request: CreateUserRequest) -> Self {
-        User {
+        Self {
             id: 0,
             first_name: request.first_name,
             last_name: request.last_name,

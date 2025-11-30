@@ -26,7 +26,6 @@ pub fn router() -> Router<ServiceContainer> {
         .route("/logout", post(logout))
 }
 
-#[axum::debug_handler]
 pub async fn get_all_users(
     _: AdminUser,
     State(container): State<ServiceContainer>,
@@ -35,7 +34,6 @@ pub async fn get_all_users(
     Ok(Json(users))
 }
 
-#[axum::debug_handler]
 pub async fn get_by_id(
     _: AdminUser,
     Path(id): Path<i32>,
@@ -45,7 +43,6 @@ pub async fn get_by_id(
     Ok(Json(user))
 }
 
-#[axum::debug_handler]
 pub async fn create_user(
     _: AdminUser,
     State(container): State<ServiceContainer>,
@@ -55,7 +52,6 @@ pub async fn create_user(
     Ok(Json(user))
 }
 
-#[axum::debug_handler]
 pub async fn update_user(
     _: AdminUser,
     Path(id): Path<i32>,
@@ -66,7 +62,6 @@ pub async fn update_user(
     Ok(Json(user))
 }
 
-#[axum::debug_handler]
 pub async fn update_self(
     auth: AuthUser,
     State(container): State<ServiceContainer>,
@@ -76,7 +71,6 @@ pub async fn update_self(
     Ok(Json(user))
 }
 
-#[axum::debug_handler]
 pub async fn delete_user(
     _: AdminUser,
     Path(id): Path<i32>,
@@ -86,7 +80,6 @@ pub async fn delete_user(
     Ok(())
 }
 
-#[axum::debug_handler]
 pub async fn login(
     State(container): State<ServiceContainer>,
     Json(login): Json<LoginRequest>,
@@ -117,7 +110,6 @@ pub async fn login(
     Ok((jar, Json(user)))
 }
 
-#[axum::debug_handler]
 pub async fn logout(
     auth: AuthUser,
     State(container): State<ServiceContainer>,

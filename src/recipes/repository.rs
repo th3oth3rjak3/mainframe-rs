@@ -50,7 +50,7 @@ pub struct SqlxRecipeRepository {
 }
 
 impl SqlxRecipeRepository {
-    pub fn new(pool: PgPool) -> Self {
+    pub const fn new(pool: PgPool) -> Self {
         Self { pool }
     }
 }
@@ -260,7 +260,7 @@ pub struct SqlxIngredientRepository {
 }
 
 impl SqlxIngredientRepository {
-    pub fn new(pool: PgPool) -> Self {
+    pub const fn new(pool: PgPool) -> Self {
         Self { pool }
     }
 }
@@ -286,7 +286,7 @@ pub struct SqlxInstructionRepository {
 }
 
 impl SqlxInstructionRepository {
-    pub fn new(pool: PgPool) -> Self {
+    pub const fn new(pool: PgPool) -> Self {
         Self { pool }
     }
 }

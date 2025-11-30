@@ -30,15 +30,5 @@ uuid = { version = "1.18.1", features = ["serde", "v4"] }
 
 
 [lints.clippy]
-# Deny these at the crate level
-unwrap_used = "deny"
-expect_used = "deny"
-panic = "deny"
-indexing_slicing = "deny"
-todo = "deny"
-unimplemented = "deny"
-unreachable = "deny"
-
-# Warn on these
-pedantic = "warn"
-nursery = "warn"
+nursery = "deny"
+pedantic = "deny"

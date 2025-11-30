@@ -33,16 +33,16 @@ where
         let session_id = cookie_jar
             .get("session_id")
             .and_then(|cookie| Uuid::parse_str(cookie.value()).ok())
-            .ok_or(ApiError::unauthorized())?;
+            .ok_or_else(ApiError::unauthorized)?;
 
         let (session, user) = container
             .session_service()
             .get_session_with_user(session_id)
             .await
             .map_err(|_| ApiError::unauthorized())?
-            .ok_or(ApiError::unauthorized())?;
+            .ok_or_else(ApiError::unauthorized)?;
 
-        Ok(AuthUser { user, session })
+        Ok(Self { user, session })
     }
 }
 
@@ -71,7 +71,7 @@ where
             return Err(ApiError::forbidden());
         }
 
-        Ok(AdminUser {
+        Ok(Self {
             user: auth_user.user,
             session: auth_user.session,
         })

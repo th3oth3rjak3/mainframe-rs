@@ -49,7 +49,7 @@ pub struct Instruction {
 
 impl From<RecipeBase> for Recipe {
     fn from(base: RecipeBase) -> Self {
-        Recipe {
+        Self {
             id: base.id,
             name: base.name,
             author: base.author,
