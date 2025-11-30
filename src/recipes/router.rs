@@ -22,10 +22,10 @@ pub struct RecipeFilters {
     pub q: Option<String>, // Filter by name
 }
 
-fn default_page() -> i64 {
+const fn default_page() -> i64 {
     1
 }
-fn default_page_size() -> i64 {
+const fn default_page_size() -> i64 {
     20
 }
 
@@ -38,7 +38,6 @@ pub fn router() -> Router<ServiceContainer> {
         )
 }
 
-#[axum::debug_handler]
 pub async fn get_all_recipes(
     auth: AuthUser,
     State(container): State<ServiceContainer>,
@@ -57,7 +56,6 @@ pub async fn get_all_recipes(
     Ok(Json(recipes))
 }
 
-#[axum::debug_handler]
 pub async fn get_by_id(
     auth: AuthUser,
     Path(id): Path<i32>,
@@ -71,7 +69,6 @@ pub async fn get_by_id(
     Ok(Json(recipe))
 }
 
-#[axum::debug_handler]
 pub async fn create_recipe(
     auth: AuthUser,
     State(container): State<ServiceContainer>,
@@ -85,7 +82,6 @@ pub async fn create_recipe(
     Ok(Json(recipe))
 }
 
-#[axum::debug_handler]
 pub async fn update_recipe(
     auth: AuthUser,
     State(container): State<ServiceContainer>,
@@ -100,7 +96,6 @@ pub async fn update_recipe(
     Ok(Json(recipe))
 }
 
-#[axum::debug_handler]
 pub async fn delete_recipe(
     auth: AuthUser,
     State(container): State<ServiceContainer>,

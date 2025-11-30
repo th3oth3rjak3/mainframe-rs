@@ -47,7 +47,7 @@ impl IUserService for UserService {
             .get_all()
             .await?
             .into_iter()
-            .map(|u| u.into())
+            .map(UserResponse::from)
             .collect::<Vec<_>>();
 
         Ok(users)

@@ -17,7 +17,7 @@ pub struct SqlxUserRepository {
 }
 
 impl SqlxUserRepository {
-    pub fn new(pool: PgPool) -> Self {
+    pub const fn new(pool: PgPool) -> Self {
         Self { pool }
     }
 }
@@ -41,11 +41,7 @@ impl IUserRepository for SqlxUserRepository {
         .fetch_optional(&self.pool)
         .await?;
 
-        if let Some(user) = maybe_user {
-            Ok(user)
-        } else {
-            Err(RepositoryError::Unauthorized)
-        }
+        maybe_user.ok_or_else(|| RepositoryError::Unauthorized)
     }
 
     async fn get_all(&self) -> Result<Vec<User>, RepositoryError> {
