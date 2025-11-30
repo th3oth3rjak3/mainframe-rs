@@ -27,27 +27,27 @@ pub enum ApiError {
 
 impl ApiError {
     pub fn internal(msg: impl Into<String>) -> Self {
-        ApiError::Internal(ErrorResponse { error: msg.into() })
+        Self::Internal(ErrorResponse { error: msg.into() })
     }
 
     pub fn not_found() -> Self {
-        ApiError::NotFound(ErrorResponse {
+        Self::NotFound(ErrorResponse {
             error: "Not Found".into(),
         })
     }
 
     pub fn bad_request(msg: impl Into<String>) -> Self {
-        ApiError::BadRequest(ErrorResponse { error: msg.into() })
+        Self::BadRequest(ErrorResponse { error: msg.into() })
     }
 
     pub fn unauthorized() -> Self {
-        ApiError::Unauthorized(ErrorResponse {
+        Self::Unauthorized(ErrorResponse {
             error: "Unauthorized".into(),
         })
     }
 
     pub fn forbidden() -> Self {
-        ApiError::Forbidden(ErrorResponse {
+        Self::Forbidden(ErrorResponse {
             error: "Forbidden".into(),
         })
     }
@@ -56,11 +56,11 @@ impl ApiError {
 impl Display for ApiError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Self::NotFound(r) => f.write_str(&r.error),
-            Self::BadRequest(r) => f.write_str(&r.error),
-            Self::Internal(r) => f.write_str(&r.error),
-            Self::Unauthorized(r) => f.write_str(&r.error),
-            Self::Forbidden(r) => f.write_str(&r.error),
+            Self::NotFound(r)
+            | Self::BadRequest(r)
+            | Self::Internal(r)
+            | Self::Unauthorized(r)
+            | Self::Forbidden(r) => f.write_str(&r.error),
         }
     }
 }
@@ -70,14 +70,14 @@ impl From<RepositoryError> for ApiError {
         match err {
             RepositoryError::Database(e) => {
                 tracing::error!("Database error: {e}");
-                ApiError::internal("Database error")
+                Self::internal("Database error")
             }
-            RepositoryError::Unauthorized => ApiError::unauthorized(),
-            RepositoryError::NotFound => ApiError::not_found(),
-            RepositoryError::Validation(msg) => ApiError::bad_request(msg),
+            RepositoryError::Unauthorized => Self::unauthorized(),
+            RepositoryError::NotFound => Self::not_found(),
+            RepositoryError::Validation(msg) => Self::bad_request(msg),
             RepositoryError::Other(msg) => {
                 tracing::error!("Unexpected error: {msg}");
-                ApiError::internal(msg)
+                Self::internal(msg)
             }
         }
     }
@@ -87,11 +87,11 @@ impl From<RepositoryError> for ApiError {
 impl IntoResponse for ApiError {
     fn into_response(self) -> Response {
         let (status, body) = match self {
-            ApiError::NotFound(e) => (StatusCode::NOT_FOUND, e.to_string()),
-            ApiError::BadRequest(e) => (StatusCode::BAD_REQUEST, e.to_string()),
-            ApiError::Internal(e) => (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()),
-            ApiError::Unauthorized(e) => (StatusCode::UNAUTHORIZED, e.to_string()),
-            ApiError::Forbidden(e) => (StatusCode::FORBIDDEN, e.to_string()),
+            Self::NotFound(e) => (StatusCode::NOT_FOUND, e.to_string()),
+            Self::BadRequest(e) => (StatusCode::BAD_REQUEST, e.to_string()),
+            Self::Internal(e) => (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()),
+            Self::Unauthorized(e) => (StatusCode::UNAUTHORIZED, e.to_string()),
+            Self::Forbidden(e) => (StatusCode::FORBIDDEN, e.to_string()),
         };
         (status, body).into_response()
     }

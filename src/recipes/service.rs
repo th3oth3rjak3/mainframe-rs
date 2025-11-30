@@ -40,9 +40,9 @@ pub trait IRecipeService: Send + Sync {
 
 #[derive(Clone)]
 pub struct RecipeService {
-    recipe_repo: Arc<dyn IRecipeRepository>,
-    ingredient_repo: Arc<dyn IIngredientRepository>,
-    instruction_repo: Arc<dyn IInstructionRepository>,
+    recipes: Arc<dyn IRecipeRepository>,
+    ingredients: Arc<dyn IIngredientRepository>,
+    instructions: Arc<dyn IInstructionRepository>,
 }
 
 impl RecipeService {
@@ -52,9 +52,9 @@ impl RecipeService {
         instruction_repo: Arc<dyn IInstructionRepository>,
     ) -> Self {
         Self {
-            recipe_repo,
-            ingredient_repo,
-            instruction_repo,
+            recipes: recipe_repo,
+            ingredients: ingredient_repo,
+            instructions: instruction_repo,
         }
     }
 }
@@ -70,7 +70,7 @@ impl IRecipeService for RecipeService {
     ) -> Result<PaginatedResponse<Recipe>, ApiError> {
         // Get paginated recipe bases and total count from repository
         let (recipe_bases, total) = self
-            .recipe_repo
+            .recipes
             .get_user_and_public_recipes(user_id, page, page_size, name_query)
             .await?;
 
@@ -90,8 +90,8 @@ impl IRecipeService for RecipeService {
 
         // Fetch ingredients and instructions in parallel
         let (ingredients, instructions) = tokio::try_join!(
-            self.ingredient_repo.get_all_by_recipe_ids(&recipe_ids),
-            self.instruction_repo.get_all_by_recipe_ids(&recipe_ids)
+            self.ingredients.get_all_by_recipe_ids(&recipe_ids),
+            self.instructions.get_all_by_recipe_ids(&recipe_ids)
         )?;
 
         // Build full Recipe objects by combining base + ingredients + instructions
@@ -125,7 +125,7 @@ impl IRecipeService for RecipeService {
             })
             .collect();
 
-        let total_pages = (total as f64 / page_size as f64).ceil() as i64;
+        let total_pages = (total + page_size - 1) / page_size;
 
         Ok(PaginatedResponse {
             data: recipes,
@@ -137,7 +137,7 @@ impl IRecipeService for RecipeService {
     }
 
     async fn get_by_id(&self, recipe_id: i32, user_id: i32) -> Result<Recipe, ApiError> {
-        let recipe = self.recipe_repo.get_by_id(recipe_id).await?;
+        let recipe = self.recipes.get_by_id(recipe_id).await?;
 
         if recipe.is_public || recipe.user_id == user_id {
             Ok(recipe)
@@ -153,7 +153,7 @@ impl IRecipeService for RecipeService {
         user_id: i32,
         request: RecipeRequest,
     ) -> Result<Recipe, ApiError> {
-        let recipe = self.recipe_repo.create(user_id, request).await?;
+        let recipe = self.recipes.create(user_id, request).await?;
         Ok(recipe)
     }
 
@@ -163,17 +163,17 @@ impl IRecipeService for RecipeService {
         user_id: i32,
         request: RecipeRequest,
     ) -> Result<Recipe, ApiError> {
-        let recipe = self.recipe_repo.get_by_id(recipe_id).await?;
+        let recipe = self.recipes.get_by_id(recipe_id).await?;
         if recipe.user_id != user_id {
             return Err(ApiError::not_found());
         }
 
-        let updated = self.recipe_repo.update(recipe_id, request).await?;
+        let updated = self.recipes.update(recipe_id, request).await?;
         Ok(updated)
     }
 
     async fn delete_recipe(&self, recipe_id: i32, user_id: i32) -> Result<(), ApiError> {
-        let recipe = self.recipe_repo.get_by_id(recipe_id).await?;
+        let recipe = self.recipes.get_by_id(recipe_id).await?;
 
         if recipe.user_id != user_id {
             // If a recipe exists but a user doesn't own it, don't give away that information.
@@ -181,7 +181,7 @@ impl IRecipeService for RecipeService {
             return Err(ApiError::not_found());
         }
 
-        self.recipe_repo.delete(recipe_id).await?;
+        self.recipes.delete(recipe_id).await?;
         Ok(())
     }
 }

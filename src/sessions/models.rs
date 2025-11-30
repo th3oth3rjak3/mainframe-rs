@@ -12,7 +12,7 @@ pub struct Session {
 
 impl Session {
     pub fn new(user_id: i32) -> Self {
-        Session::new_with_duration(user_id, Duration::days(1))
+        Self::new_with_duration(user_id, Duration::days(1))
     }
 
     pub fn new_with_duration(user_id: i32, duration: Duration) -> Self {
