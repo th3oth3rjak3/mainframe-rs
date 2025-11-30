@@ -1,0 +1,28 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            INSERT INTO recipes.recipes (name, author, description, difficulty, estimated_duration, is_public, user_id)\n            VALUES ($1, $2, $3, $4, $5, $6, $7)\n            RETURNING id\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int4"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Bool",
+        "Int4"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "8741584d61c412f68212ad5c5a0d8a5d262628c4c4ef0845712cec30dc517ea6"
+}
