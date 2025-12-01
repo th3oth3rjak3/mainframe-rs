@@ -1,6 +1,8 @@
+import { paginatedResponseSchema } from "@/validation/generic";
 import { defineStore } from "pinia";
 
 import * as v from 'valibot';
+import { useToast } from "vue-toastification";
 
 const IngredientSchema = v.object({
     id: v.number(),
@@ -48,16 +50,40 @@ const RecipeRequestSchema = v.object({
     instructions: v.array(InstructionRequestSchema),
 });
 
-type Recipe = v.InferOutput<typeof RecipeSchema>;
-type Ingredient = v.InferOutput<typeof IngredientSchema>;
-type Instruction = v.InferOutput<typeof InstructionSchema>;
+export type Recipe = v.InferOutput<typeof RecipeSchema>;
+export type Ingredient = v.InferOutput<typeof IngredientSchema>;
+export type Instruction = v.InferOutput<typeof InstructionSchema>;
 
-type RecipeRequest = v.InferOutput<typeof RecipeRequestSchema>;
-type IngredientRequest = v.InferOutput<typeof IngredientRequestSchema>;
-type InstructionRequest = v.InferOutput<typeof InstructionRequestSchema>;
+export type RecipeRequest = v.InferOutput<typeof RecipeRequestSchema>;
+export type IngredientRequest = v.InferOutput<typeof IngredientRequestSchema>;
+export type InstructionRequest = v.InferOutput<typeof InstructionRequestSchema>;
+
+const PaginatedRecipeSchema = paginatedResponseSchema(RecipeSchema);
+export type PaginatedRecipes = v.InferOutput<typeof PaginatedRecipeSchema>;
 
 export const useRecipeStore = defineStore('recipe', {
     state: () => ({}),
     getters: {},
-    actions: {},
+    actions: {
+        async searchRecipes(page: number, pageSize: number, name?: string): Promise<PaginatedRecipes | null> {
+            const toast = useToast();
+            let query = `/api/recipes?page=${page}&pageSize=${pageSize}`;
+            if (name) {
+                query = query + `&q=${name}`;
+            }
+
+            const response = await fetch(query, {
+                method: 'GET',
+            });
+
+            if (!response.ok) {
+                toast.error('Error getting recipes from the server');
+                return null;
+            }
+
+            const data = await response.json();
+            const recipes = v.parse(paginatedResponseSchema(RecipeSchema), data);
+            return recipes;
+        }
+    },
 });

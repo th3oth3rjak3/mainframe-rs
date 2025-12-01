@@ -14,6 +14,7 @@ use crate::services::ServiceContainer;
 use crate::shared_models::PaginatedResponse;
 
 #[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct RecipeFilters {
     #[serde(default = "default_page")]
     pub page: i64,
