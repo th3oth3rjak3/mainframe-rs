@@ -4,6 +4,7 @@ import type { RouteRecordRaw } from 'vue-router';
 import DashboardPage from '@/views/DashboardPage.vue';
 import LoginPage from '@/views/LoginPage.vue';
 import { useUserStore } from '@/stores/user';
+import RecipesListPage from '@/views/RecipesListPage.vue';
 
 const routes: RouteRecordRaw[] = [
     {
@@ -16,11 +17,11 @@ const routes: RouteRecordRaw[] = [
         name: 'Login',
         component: LoginPage,
     },
-    //   {
-    //     path: '/recipes',
-    //     name: 'Recipes', 
-    //     component: Recipes
-    //   },
+    {
+        path: '/recipes',
+        name: 'Recipes',
+        component: RecipesListPage,
+    },
     //   {
     //     path: '/recipes/:id',
     //     name: 'RecipeDetail',
@@ -43,7 +44,7 @@ router.beforeEach(async (to, from) => {
     const auth = useUserStore();
     if (!auth.isLoggedIn && from.name === undefined) {
         await auth.hydrateUser();
-    } 
+    }
 
     // Allow users to login when not yet logged in.
     if (!auth.isLoggedIn && to.name === 'Login') {

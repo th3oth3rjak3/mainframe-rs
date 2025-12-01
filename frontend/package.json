@@ -15,6 +15,7 @@
     "@fontsource/roboto": "5.2.9",
     "@mdi/font": "7.4.47",
     "@vee-validate/valibot": "^4.15.1",
+    "@vueuse/core": "^14.0.0",
     "pinia": "^3.0.4",
     "valibot": "^1.2.0",
     "vee-validate": "^4.15.1",
