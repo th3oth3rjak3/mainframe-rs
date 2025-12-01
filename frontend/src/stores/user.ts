@@ -3,6 +3,7 @@ import { isoDate } from '@/validation/date';
 
 import * as v from 'valibot';
 import { useToast } from 'vue-toastification';
+import { useRouter } from 'vue-router';
 
 const UserSchema = v.object({
     id: v.number(),
@@ -99,9 +100,25 @@ export const useUserStore = defineStore('user', {
             }
         },
 
-        logout() {
-            // TODO: call the backend logout function to get rid of the current session.
-            this.currentUser = null
+        async logout() {
+            const toast = useToast();
+            try {
+                const response = await fetch('/api/users/logout', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: null,
+                });
+
+                if (!response.ok) {
+                    toast.error("Logout failed on the server");
+                    throw new Error('Http response was not success');
+                }
+
+                this.currentUser = null;
+            } catch (error) {
+                console.error('Logout failed:', error)
+                toast.error('Server error. Please try again later.', { timeout: false });
+            }
         }
     }
 })

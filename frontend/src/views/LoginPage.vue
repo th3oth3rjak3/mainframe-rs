@@ -14,6 +14,19 @@
 
 <script setup lang="ts">
 import LoginForm from '@/components/LoginForm.vue';
+import { useUserStore } from '@/stores/user';
+import { onMounted } from 'vue';
+import { useRouter } from 'vue-router';
+const userStore = useUserStore();
+const router = useRouter();
 
+onMounted(async () => {
+    if (!userStore.isLoggedIn) {
+        await userStore.hydrateUser();
+        if (userStore.isLoggedIn) {
+            await router.replace({ name: "Dashboard" });
+        }
+    }
+});
 
 </script>
