@@ -24,9 +24,7 @@ import * as v from 'valibot';
 import { useRouter } from 'vue-router';
 
 const router = useRouter();
-
 const userStore = useUserStore();
-
 const initialValues = {
     username: '',
     password: ''
@@ -38,6 +36,6 @@ async function onSubmit(values: GenericObject) {
     console.log('Form values:', values);
     const request: LoginRequest = v.parse(LoginRequestSchema, values);
     await userStore.login(request);
-    await router.replace("/")
+    await router.replace({ name: 'Dashboard' });
 }
 </script>
