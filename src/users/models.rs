@@ -5,6 +5,7 @@ use argon2::{
 };
 use serde::{Deserialize, Serialize};
 use sqlx::prelude::FromRow;
+use uuid::{Uuid};
 use std::fmt::Display;
 use time::OffsetDateTime;
 
@@ -48,14 +49,17 @@ impl Display for Password {
 #[derive(Debug, Clone, Serialize, Deserialize, FromRow)]
 #[serde(rename_all = "camelCase")]
 pub struct User {
-    pub id: i32,
+    pub id: Uuid,
     pub first_name: String,
     pub last_name: String,
     pub email: String,
     pub username: String,
-    pub password: Password,
-    pub is_admin: bool,
+    pub password_hash: Password,
     pub last_login: Option<OffsetDateTime>,
+    pub failed_login_attempts: i64,
+    pub last_failed_login_attempt: Option<OffsetDateTime>,
+    pub created_at: OffsetDateTime,
+    pub updated_at: OffsetDateTime,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -83,14 +87,13 @@ pub struct UpdateUserRequest {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct UserResponse {
-    pub id: i32,
+    pub id: Uuid,
     pub first_name: String,
     pub last_name: String,
     pub email: String,
     pub username: String,
     #[serde(with = "time::serde::rfc3339::option")]
     pub last_login: Option<OffsetDateTime>,
-    pub is_admin: bool,
 }
 
 impl From<User> for UserResponse {
@@ -102,7 +105,6 @@ impl From<User> for UserResponse {
             email: user.email,
             username: user.username,
             last_login: user.last_login,
-            is_admin: user.is_admin,
         }
     }
 }
@@ -112,14 +114,17 @@ impl TryFrom<CreateUserRequest> for User {
 
     fn try_from(request: CreateUserRequest) -> Result<Self, Self::Error> {
         Ok(Self {
-            id: 0,
+            id: Uuid::now_v7(),
             first_name: request.first_name,
             last_name: request.last_name,
             email: request.email,
             username: request.username,
-            password: Password::new(&request.raw_password)?,
+            password_hash: Password::new(&request.raw_password)?,
             last_login: None,
-            is_admin: request.is_admin,
+            created_at: OffsetDateTime::now_utc(),
+            updated_at: OffsetDateTime::now_utc(),
+            failed_login_attempts: 0,
+            last_failed_login_attempt: None,
         })
     }
 }

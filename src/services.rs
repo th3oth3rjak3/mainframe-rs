@@ -7,7 +7,7 @@ use crate::{
     users::{IUserService, SqlxUserRepository, UserService},
 };
 
-use sqlx::PgPool;
+use sqlx::SqlitePool;
 use std::sync::Arc;
 
 /// A container holding all shared services and resources for the app
@@ -19,7 +19,7 @@ pub struct ServiceContainer {
 }
 
 impl ServiceContainer {
-    pub fn new(pool: PgPool) -> Self {
+    pub fn new(pool: SqlitePool) -> Self {
         Self {
             recipes: Arc::new(Self::make_recipe_service(pool.clone())),
             users: Arc::new(Self::make_user_service(pool.clone())),
@@ -27,7 +27,7 @@ impl ServiceContainer {
         }
     }
 
-    fn make_recipe_service(pool: PgPool) -> impl IRecipeService {
+    fn make_recipe_service(pool: SqlitePool) -> impl IRecipeService {
         let recipe_repo = Arc::new(SqlxRecipeRepository::new(pool.clone()));
         let ingredient_repo = Arc::new(SqlxIngredientRepository::new(pool.clone()));
         let instruction_repo = Arc::new(SqlxInstructionRepository::new(pool));
@@ -40,7 +40,7 @@ impl ServiceContainer {
         self.recipes.clone()
     }
 
-    fn make_user_service(pool: PgPool) -> impl IUserService {
+    fn make_user_service(pool: SqlitePool) -> impl IUserService {
         let user_repo = Arc::new(SqlxUserRepository::new(pool));
 
         UserService::new(user_repo)
@@ -50,7 +50,7 @@ impl ServiceContainer {
         self.users.clone()
     }
 
-    fn make_session_service(pool: PgPool) -> impl ISessionService {
+    fn make_session_service(pool: SqlitePool) -> impl ISessionService {
         let session_repo = Arc::new(SqlxSessionRepository::new(pool));
         SessionService::new(session_repo)
     }

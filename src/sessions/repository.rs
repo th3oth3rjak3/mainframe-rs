@@ -39,7 +39,7 @@ impl ISessionRepository for SqlxSessionRepository {
         sqlx::query!(
             r#"
             INSERT INTO public.sessions (id, user_id, created_at, expires_at)
-            VALUES ($1, $2, $3, $4)"#,
+            VALUES (?, ?, ?, ?)"#,
             session.id,
             session.user_id,
             session.created_at,
@@ -52,7 +52,7 @@ impl ISessionRepository for SqlxSessionRepository {
     }
 
     async fn delete(&self, id: Uuid) -> Result<(), RepositoryError> {
-        sqlx::query!("DELETE FROM public.sessions WHERE id = $1", id)
+        sqlx::query!("DELETE FROM public.sessions WHERE id = ?", id)
             .execute(&self.pool)
             .await?;
 
@@ -86,7 +86,7 @@ impl ISessionRepository for SqlxSessionRepository {
                 s.expires_at
             FROM public.users u
             INNER JOIN public.sessions s on u.id = s.user_id
-            WHERE s.id = $1
+            WHERE s.id = ?
             "#,
             session_id
         )

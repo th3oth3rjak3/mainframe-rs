@@ -3,7 +3,7 @@ use crate::{
     recipes::{Ingredient, Instruction, Recipe, RecipeBase, RecipeRequest},
 };
 use async_trait::async_trait;
-use sqlx::PgPool;
+use sqlx::SqlitePool;
 
 #[async_trait::async_trait]
 pub trait IRecipeRepository: Send + Sync {
@@ -46,11 +46,11 @@ pub trait IInstructionRepository: Send + Sync {
 }
 
 pub struct SqlxRecipeRepository {
-    pub pool: PgPool,
+    pub pool: SqlitePool,
 }
 
 impl SqlxRecipeRepository {
-    pub const fn new(pool: PgPool) -> Self {
+    pub const fn new(pool: SqlitePool) -> Self {
         Self { pool }
     }
 }
@@ -67,8 +67,8 @@ impl IRecipeRepository for SqlxRecipeRepository {
         let offset = page.saturating_sub(1).saturating_mul(page_size);
 
         let total: i64 = sqlx::query_scalar!(
-            "SELECT COUNT(*) FROM recipes.recipes
-             WHERE (user_id = $1 OR is_public = true)
+            "SELECT COUNT(*) FROM recipes
+             WHERE (user_id = ? OR is_public = true)
                AND ($2::TEXT IS NULL OR name ILIKE '%' || $2 || '%')",
             user_id,
             name_query
@@ -79,11 +79,11 @@ impl IRecipeRepository for SqlxRecipeRepository {
 
         let recipes = sqlx::query_as!(
             RecipeBase,
-            "SELECT * FROM recipes.recipes
-             WHERE (user_id = $1 OR is_public = true)
-               AND ($4::TEXT IS NULL OR name ILIKE '%' || $4 || '%')
+            "SELECT * FROM recipes
+             WHERE (user_id = ? OR is_public = true)
+               AND (? IS NULL OR name LIKE '%' || ? || '%')
              ORDER BY name ASC
-             LIMIT $2 OFFSET $3",
+             LIMIT ? OFFSET ?",
             user_id,
             page_size.into(),
             offset.into(),
@@ -98,7 +98,7 @@ impl IRecipeRepository for SqlxRecipeRepository {
     async fn get_by_id(&self, recipe_id: i32) -> Result<Recipe, RepositoryError> {
         let base = sqlx::query_as!(
             RecipeBase,
-            "SELECT * FROM recipes.recipes WHERE id = $1",
+            "SELECT * FROM recipes WHERE id = ?",
             recipe_id
         )
         .fetch_optional(&self.pool)
@@ -107,7 +107,7 @@ impl IRecipeRepository for SqlxRecipeRepository {
 
         let ingredients = sqlx::query_as!(
             Ingredient,
-            "SELECT * FROM recipes.ingredients WHERE recipe_id = $1",
+            "SELECT * FROM ingredients WHERE recipe_id = ?",
             recipe_id
         )
         .fetch_all(&self.pool)
@@ -115,7 +115,7 @@ impl IRecipeRepository for SqlxRecipeRepository {
 
         let instructions = sqlx::query_as!(
             Instruction,
-            "SELECT * FROM recipes.instructions WHERE recipe_id = $1",
+            "SELECT * FROM instructions WHERE recipe_id = ?",
             recipe_id
         )
         .fetch_all(&self.pool)
@@ -138,8 +138,8 @@ impl IRecipeRepository for SqlxRecipeRepository {
 
         let id = sqlx::query_scalar!(
             r#"
-            INSERT INTO recipes.recipes (name, author, description, difficulty, estimated_duration, is_public, user_id)
-            VALUES ($1, $2, $3, $4, $5, $6, $7)
+            INSERT INTO recipes (name, author, description, difficulty, estimated_duration, is_public, user_id)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
             RETURNING id
             "#,
             request.name,
@@ -154,7 +154,7 @@ impl IRecipeRepository for SqlxRecipeRepository {
 
         for ingredient in &request.ingredients {
             sqlx::query!(
-                "INSERT INTO recipes.ingredients (recipe_id, position, description) VALUES ($1, $2, $3)",
+                "INSERT INTO ingredients (recipe_id, position, description) VALUES (?, ?, ?)",
                 id,
                 ingredient.position,
                 ingredient.description)
@@ -163,7 +163,7 @@ impl IRecipeRepository for SqlxRecipeRepository {
 
         for instruction in &request.instructions {
             sqlx::query!(
-                "INSERT INTO recipes.instructions (recipe_id, position, description) VALUES ($1, $2, $3)",
+                "INSERT INTO instructions (recipe_id, position, description) VALUES (?, ?, ?)",
                 id,
                 instruction.position,
                 instruction.description)
@@ -185,10 +185,10 @@ impl IRecipeRepository for SqlxRecipeRepository {
         // Update the recipe header
         sqlx::query!(
             r#"
-            UPDATE recipes.recipes
-            SET name = $1, author = $2, description = $3, difficulty = $4,
-                estimated_duration = $5, is_public = $6
-            WHERE id = $7
+            UPDATE recipes
+            SET name = ?, author = ?, description = ?, difficulty = ?,
+                estimated_duration = ?, is_public = ?
+            WHERE id = ?
             "#,
             request.name,
             request.author,
@@ -203,14 +203,14 @@ impl IRecipeRepository for SqlxRecipeRepository {
 
         // Delete old ingredients and instructions
         sqlx::query!(
-            "DELETE FROM recipes.ingredients WHERE recipe_id = $1",
+            "DELETE FROM ingredients WHERE recipe_id = ?",
             recipe_id
         )
         .execute(&mut *tx)
         .await?;
 
         sqlx::query!(
-            "DELETE FROM recipes.instructions WHERE recipe_id = $1",
+            "DELETE FROM instructions WHERE recipe_id = ?",
             recipe_id
         )
         .execute(&mut *tx)
@@ -219,7 +219,7 @@ impl IRecipeRepository for SqlxRecipeRepository {
         // Insert new ingredients
         for ingredient in &request.ingredients {
             sqlx::query!(
-                "INSERT INTO recipes.ingredients (recipe_id, position, description) VALUES ($1, $2, $3)",
+                "INSERT INTO ingredients (recipe_id, position, description) VALUES (?, ?, ?)",
                 recipe_id,
                 ingredient.position,
                 ingredient.description
@@ -231,7 +231,7 @@ impl IRecipeRepository for SqlxRecipeRepository {
         // Insert new instructions
         for instruction in &request.instructions {
             sqlx::query!(
-                "INSERT INTO recipes.instructions (recipe_id, position, description) VALUES ($1, $2, $3)",
+                "INSERT INTO instructions (recipe_id, position, description) VALUES (?, ?, ?)",
                 recipe_id,
                 instruction.position,
                 instruction.description
@@ -247,7 +247,7 @@ impl IRecipeRepository for SqlxRecipeRepository {
     }
 
     async fn delete(&self, recipe_id: i32) -> Result<(), RepositoryError> {
-        sqlx::query!("DELETE FROM recipes.recipes WHERE id = $1", recipe_id)
+        sqlx::query!("DELETE FROM recipes.recipes WHERE id = ?", recipe_id)
             .execute(&self.pool)
             .await?;
 
@@ -256,11 +256,11 @@ impl IRecipeRepository for SqlxRecipeRepository {
 }
 
 pub struct SqlxIngredientRepository {
-    pub pool: PgPool,
+    pub pool: SqlitePool,
 }
 
 impl SqlxIngredientRepository {
-    pub const fn new(pool: PgPool) -> Self {
+    pub const fn new(pool: SqlitePool) -> Self {
         Self { pool }
     }
 }
@@ -282,11 +282,11 @@ impl IIngredientRepository for SqlxIngredientRepository {
 }
 
 pub struct SqlxInstructionRepository {
-    pub pool: PgPool,
+    pub pool: SqlitePool,
 }
 
 impl SqlxInstructionRepository {
-    pub const fn new(pool: PgPool) -> Self {
+    pub const fn new(pool: SqlitePool) -> Self {
         Self { pool }
     }
 }
