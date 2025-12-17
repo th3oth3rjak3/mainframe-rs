@@ -5,9 +5,11 @@ use argon2::{
 };
 use serde::{Deserialize, Serialize};
 use sqlx::prelude::FromRow;
-use uuid::{Uuid};
 use std::fmt::Display;
 use time::OffsetDateTime;
+use uuid::Uuid;
+
+use crate::roles::{Role, RoleName};
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, sqlx::Type)]
 #[sqlx(transparent)]
@@ -60,6 +62,45 @@ pub struct User {
     pub last_failed_login_attempt: Option<OffsetDateTime>,
     pub created_at: OffsetDateTime,
     pub updated_at: OffsetDateTime,
+    pub is_disabled: bool,
+    pub roles: Vec<Role>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, FromRow)]
+#[serde(rename_all = "camelCase")]
+pub struct UserBase {
+    pub id: Uuid,
+    pub first_name: String,
+    pub last_name: String,
+    pub email: String,
+    pub username: String,
+    pub password_hash: Password,
+    pub last_login: Option<OffsetDateTime>,
+    pub failed_login_attempts: i64,
+    pub last_failed_login_attempt: Option<OffsetDateTime>,
+    pub created_at: OffsetDateTime,
+    pub updated_at: OffsetDateTime,
+    pub is_disabled: bool,
+}
+
+impl From<UserBase> for User {
+    fn from(value: UserBase) -> Self {
+        Self {
+            id: value.id,
+            first_name: value.first_name,
+            last_name: value.last_name,
+            email: value.email,
+            username: value.username,
+            password_hash: value.password_hash,
+            last_login: value.last_login,
+            failed_login_attempts: value.failed_login_attempts,
+            last_failed_login_attempt: value.last_failed_login_attempt,
+            created_at: value.created_at,
+            updated_at: value.updated_at,
+            roles: Vec::new(),
+            is_disabled: value.is_disabled,
+        }
+    }
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -80,7 +121,6 @@ pub struct UpdateUserRequest {
     pub last_name: String,
     pub email: String,
     pub username: String,
-    pub raw_password: Option<String>,
     pub is_admin: bool,
 }
 
@@ -94,10 +134,49 @@ pub struct UserResponse {
     pub username: String,
     #[serde(with = "time::serde::rfc3339::option")]
     pub last_login: Option<OffsetDateTime>,
+    pub roles: Vec<Role>,
+}
+
+impl UserResponse {
+    pub fn is_admin(&self) -> bool {
+        for r in self.roles.iter() {
+            if r.name == RoleName::Administrator {
+                return true;
+            }
+        }
+
+        return false;
+    }
 }
 
 impl From<User> for UserResponse {
     fn from(user: User) -> Self {
+        Self {
+            id: user.id,
+            first_name: user.first_name,
+            last_name: user.last_name,
+            email: user.email,
+            username: user.username,
+            last_login: user.last_login,
+            roles: user.roles,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct UserBaseResponse {
+    pub id: Uuid,
+    pub first_name: String,
+    pub last_name: String,
+    pub email: String,
+    pub username: String,
+    #[serde(with = "time::serde::rfc3339::option")]
+    pub last_login: Option<OffsetDateTime>,
+}
+
+impl From<UserBase> for UserBaseResponse {
+    fn from(user: UserBase) -> Self {
         Self {
             id: user.id,
             first_name: user.first_name,
@@ -125,14 +204,10 @@ impl TryFrom<CreateUserRequest> for User {
             updated_at: OffsetDateTime::now_utc(),
             failed_login_attempts: 0,
             last_failed_login_attempt: None,
+            is_disabled: false,
+            roles: Vec::new(),
         })
     }
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct LoginRequest {
-    pub username: String,
-    pub password: String,
 }
 
 #[cfg(test)]

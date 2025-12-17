@@ -1,16 +1,17 @@
 use serde::{Deserialize, Serialize};
 use sqlx::prelude::FromRow;
+use uuid::Uuid;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Recipe {
-    pub id: i32,
+    pub id: Uuid,
+    pub user_id: Uuid,
     pub name: String,
     pub author: Option<String>,
     pub description: Option<String>,
     pub difficulty: Option<String>,
     pub estimated_duration: Option<String>,
-    pub user_id: i32,
     pub is_public: bool,
     pub ingredients: Vec<Ingredient>,
     pub instructions: Vec<Instruction>,
@@ -19,31 +20,31 @@ pub struct Recipe {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct RecipeBase {
-    pub id: i32,
+    pub id: Uuid,
+    pub user_id: Uuid,
     pub name: String,
     pub author: Option<String>,
     pub description: Option<String>,
     pub difficulty: Option<String>,
     pub estimated_duration: Option<String>,
-    pub user_id: i32,
     pub is_public: bool,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, FromRow)]
 #[serde(rename_all = "camelCase")]
 pub struct Ingredient {
-    pub id: i32,
-    pub recipe_id: i32,
-    pub position: i32,
+    pub id: Uuid,
+    pub recipe_id: Uuid,
+    pub position: i64,
     pub description: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, FromRow)]
 #[serde(rename_all = "camelCase")]
 pub struct Instruction {
-    pub id: i32,
-    pub recipe_id: i32,
-    pub position: i32,
+    pub id: Uuid,
+    pub recipe_id: Uuid,
+    pub position: i64,
     pub description: String,
 }
 
@@ -80,13 +81,13 @@ pub struct RecipeRequest {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct IngredientRequest {
-    pub position: i32,
+    pub position: i64,
     pub description: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct InstructionRequest {
-    pub position: i32,
+    pub position: i64,
     pub description: String,
 }

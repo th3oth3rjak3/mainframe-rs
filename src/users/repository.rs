@@ -1,15 +1,18 @@
-use crate::{errors::RepositoryError, users::User};
+use crate::{
+    errors::RepositoryError,
+    users::{User, UserBase},
+};
 use async_trait::async_trait;
 use sqlx::SqlitePool;
 use uuid::Uuid;
 
 #[async_trait::async_trait]
-pub trait IUserRepository {
-    async fn get_by_id(&self, id: Uuid) -> Result<User, RepositoryError>;
-    async fn get_by_username(&self, username: &str) -> Result<User, RepositoryError>;
-    async fn get_all(&self) -> Result<Vec<User>, RepositoryError>;
-    async fn create(&self, user: &User) -> Result<i32, RepositoryError>;
-    async fn update(&self, user: &User) -> Result<(), RepositoryError>;
+pub trait IUserRepository: Send + Sync {
+    async fn get_by_id(&self, id: Uuid) -> Result<UserBase, RepositoryError>;
+    async fn get_by_username(&self, username: &str) -> Result<UserBase, RepositoryError>;
+    async fn get_all(&self) -> Result<Vec<UserBase>, RepositoryError>;
+    async fn create(&self, user: &User) -> Result<(), RepositoryError>;
+    async fn update_base(&self, user: &UserBase) -> Result<(), RepositoryError>;
     async fn delete(&self, id: Uuid) -> Result<(), RepositoryError>;
 }
 
@@ -25,8 +28,10 @@ impl SqlxUserRepository {
 
 #[async_trait]
 impl IUserRepository for SqlxUserRepository {
-    async fn get_by_id(&self, id: uuid::Uuid) -> Result<User, RepositoryError> {
-        let user = sqlx::query_as!(User, r#"
+    async fn get_by_id(&self, id: uuid::Uuid) -> Result<UserBase, RepositoryError> {
+        let user_base = sqlx::query_as!(
+            UserBase,
+            r#"
             SELECT 
                 id as "id: uuid::Uuid", 
                 email, 
@@ -37,87 +42,142 @@ impl IUserRepository for SqlxUserRepository {
                 last_login,
                 failed_login_attempts,
                 last_failed_login_attempt,
+                is_disabled,
                 created_at,
                 updated_at
             FROM users 
-            WHERE id = ?;"#, 
-            id)
-            .fetch_one(&self.pool)
-            .await?;
+            WHERE id = ?;"#,
+            id
+        )
+        .fetch_optional(&self.pool)
+        .await?;
 
-        return Ok(user);
+        user_base.ok_or(RepositoryError::NotFound {
+            entity: "user",
+            property: "id",
+            value: id.to_string(),
+        })
     }
 
-    async fn get_by_username(&self, username: &str) -> Result<User, RepositoryError> {
-        let maybe_user = sqlx::query_as!(
-            User,
-            "SELECT * FROM users WHERE LOWER(username) = LOWER(?)",
+    async fn get_by_username(&self, username: &str) -> Result<UserBase, RepositoryError> {
+        let user_base = sqlx::query_as!(
+            UserBase,
+            r#"
+            SELECT 
+                id as "id: uuid::Uuid", 
+                email, 
+                first_name, 
+                last_name, 
+                username, 
+                password_hash,
+                last_login,
+                is_disabled,
+                failed_login_attempts,
+                last_failed_login_attempt,
+                created_at,
+                updated_at
+            FROM users 
+            WHERE LOWER(username) = LOWER(?)"#,
             username
         )
         .fetch_optional(&self.pool)
         .await?;
 
-        maybe_user.ok_or_else(|| RepositoryError::Unauthorized)
+        user_base.ok_or(RepositoryError::NotFound {
+            entity: "user",
+            property: "username",
+            value: username.to_owned(),
+        })
     }
 
-    async fn get_all(&self) -> Result<Vec<User>, RepositoryError> {
-        let users = sqlx::query_as!(User, "SELECT * from public.users")
-            .fetch_all(&self.pool)
-            .await?;
+    async fn get_all(&self) -> Result<Vec<UserBase>, RepositoryError> {
+        let users = sqlx::query_as!(
+            UserBase,
+            r#"
+            SELECT 
+                id as "id: uuid::Uuid", 
+                email, 
+                first_name, 
+                last_name, 
+                username, 
+                password_hash,
+                last_login,
+                is_disabled,
+                failed_login_attempts,
+                last_failed_login_attempt,
+                created_at,
+                updated_at
+            FROM users"#
+        )
+        .fetch_all(&self.pool)
+        .await?;
 
         return Ok(users);
     }
 
-    async fn create(&self, user: &User) -> Result<i32, RepositoryError> {
-        let created = sqlx::query!(
-            r#"INSERT INTO public.users (first_name, last_name, email, username, password, is_admin)
-            VALUES ($1, $2, $3, $4, $5, $6)
-            RETURNING id
+    async fn create(&self, user: &User) -> Result<(), RepositoryError> {
+        sqlx::query!(
+            r#"INSERT INTO users (id, email, first_name, last_name, username, password_hash)
+            VALUES (?, ?, ?, ?, ?, ?)
             "#,
+            user.id,
+            user.email,
             user.first_name,
             user.last_name,
-            user.email,
             user.username,
-            user.password.to_string(),
-            user.is_admin
+            user.password_hash
         )
         .fetch_one(&self.pool)
         .await?;
 
-        Ok(created.id)
+        Ok(())
     }
 
-    async fn update(&self, user: &User) -> Result<(), RepositoryError> {
-        sqlx::query!(
+    async fn update_base(&self, user: &UserBase) -> Result<(), RepositoryError> {
+        let result = sqlx::query!(
             r#"
             UPDATE users
             SET first_name = ?,
             last_name = ?,
             email = ?,
             username = ?,
-            password = ?,
-            is_admin = ?,
-            last_login = ?
+            is_disabled = ?
             WHERE id = ?
             "#,
             user.first_name,
             user.last_name,
             user.email,
             user.username,
-            user.password.to_string(),
-            user.is_admin,
-            user.last_login,
+            user.is_disabled,
             user.id
         )
         .execute(&self.pool)
         .await?;
+
+        if result.rows_affected() == 0 {
+            return Err(RepositoryError::NotFound{
+                entity: "user",
+                property: "id",
+                value: user.id.to_string(),
+            });
+        }
+
         Ok(())
     }
 
     async fn delete(&self, id: Uuid) -> Result<(), RepositoryError> {
-        sqlx::query!("DELETE FROM users WHERE id = ?", id)
+        let result = sqlx::query!("DELETE FROM users WHERE id = ?", id)
             .execute(&self.pool)
             .await?;
+
+        if result.rows_affected() == 0 {
+            return Err(RepositoryError::NotFound{
+                entity: "user",
+                property: "id",
+                value: id.to_string(),
+            });
+        }
+
         Ok(())
     }
 }

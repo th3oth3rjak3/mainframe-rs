@@ -4,36 +4,41 @@ use crate::{
 };
 use async_trait::async_trait;
 use sqlx::SqlitePool;
+use uuid::Uuid;
 
 #[async_trait::async_trait]
 pub trait IRecipeRepository: Send + Sync {
     async fn get_user_and_public_recipes(
         &self,
-        user_id: i32,
+        user_id: Uuid,
         page: i64,
         page_size: i64,
         name_query: Option<&str>,
     ) -> Result<(Vec<RecipeBase>, i64), RepositoryError>;
 
-    async fn get_by_id(&self, recipe_id: i32) -> Result<Recipe, RepositoryError>;
+    async fn get_by_id(&self, recipe_id: Uuid) -> Result<Recipe, RepositoryError>;
 
-    async fn create(&self, user_id: i32, request: RecipeRequest)
-    -> Result<Recipe, RepositoryError>;
+    async fn create(
+        &self,
+        user_id: Uuid,
+        recipe_id: Uuid,
+        request: RecipeRequest,
+    ) -> Result<(), RepositoryError>;
 
     async fn update(
         &self,
-        recipe_id: i32,
+        recipe_id: Uuid,
         request: RecipeRequest,
-    ) -> Result<Recipe, RepositoryError>;
+    ) -> Result<(), RepositoryError>;
 
-    async fn delete(&self, recipe_id: i32) -> Result<(), RepositoryError>;
+    async fn delete(&self, recipe_id: Uuid) -> Result<(), RepositoryError>;
 }
 
 #[async_trait]
 pub trait IIngredientRepository: Send + Sync {
     async fn get_all_by_recipe_ids(
         &self,
-        recipe_ids: &[i32],
+        recipe_ids: &[Uuid],
     ) -> Result<Vec<Ingredient>, RepositoryError>;
 }
 
@@ -41,7 +46,7 @@ pub trait IIngredientRepository: Send + Sync {
 pub trait IInstructionRepository: Send + Sync {
     async fn get_all_by_recipe_ids(
         &self,
-        recipe_ids: &[i32],
+        recipe_ids: &[Uuid],
     ) -> Result<Vec<Instruction>, RepositoryError>;
 }
 
@@ -59,35 +64,45 @@ impl SqlxRecipeRepository {
 impl IRecipeRepository for SqlxRecipeRepository {
     async fn get_user_and_public_recipes(
         &self,
-        user_id: i32,
+        user_id: Uuid,
         page: i64,
         page_size: i64,
         name_query: Option<&str>,
     ) -> Result<(Vec<RecipeBase>, i64), RepositoryError> {
-        let offset = page.saturating_sub(1).saturating_mul(page_size);
+        let offset = (page - 1) * page_size;
 
         let total: i64 = sqlx::query_scalar!(
             "SELECT COUNT(*) FROM recipes
              WHERE (user_id = ? OR is_public = true)
-               AND ($2::TEXT IS NULL OR name ILIKE '%' || $2 || '%')",
+               AND (? IS NULL OR name LIKE '%' || ? || '%')",
             user_id,
+            name_query,
             name_query
         )
         .fetch_one(&self.pool)
-        .await?
-        .unwrap_or(0);
+        .await?;
 
         let recipes = sqlx::query_as!(
             RecipeBase,
-            "SELECT * FROM recipes
-             WHERE (user_id = ? OR is_public = true)
-               AND (? IS NULL OR name LIKE '%' || ? || '%')
-             ORDER BY name ASC
-             LIMIT ? OFFSET ?",
+            r#"SELECT 
+                id as "id: uuid::Uuid",
+                user_id as "user_id: uuid::Uuid",
+                author,
+                name,
+                description,
+                difficulty,
+                estimated_duration,
+                is_public
+            FROM recipes
+            WHERE (user_id = ? OR is_public = true)
+            AND (? IS NULL OR name LIKE '%' || ? || '%')
+            ORDER BY name ASC
+            LIMIT ? OFFSET ?"#,
             user_id,
-            page_size.into(),
-            offset.into(),
-            name_query
+            name_query,
+            name_query,
+            page_size,
+            offset
         )
         .fetch_all(&self.pool)
         .await?;
@@ -95,19 +110,39 @@ impl IRecipeRepository for SqlxRecipeRepository {
         Ok((recipes, total))
     }
 
-    async fn get_by_id(&self, recipe_id: i32) -> Result<Recipe, RepositoryError> {
+    async fn get_by_id(&self, recipe_id: Uuid) -> Result<Recipe, RepositoryError> {
         let base = sqlx::query_as!(
             RecipeBase,
-            "SELECT * FROM recipes WHERE id = ?",
+            r#"SELECT 
+                id as "id: uuid::Uuid",
+                user_id as "user_id: uuid::Uuid",
+                author,
+                name,
+                description,
+                difficulty,
+                estimated_duration,
+                is_public
+            FROM recipes 
+            WHERE id = ?"#,
             recipe_id
         )
         .fetch_optional(&self.pool)
         .await?
-        .ok_or(RepositoryError::NotFound)?;
+        .ok_or(RepositoryError::NotFound {
+            entity: "recipe",
+            property: "id",
+            value: recipe_id.to_string(),
+        })?;
 
         let ingredients = sqlx::query_as!(
             Ingredient,
-            "SELECT * FROM ingredients WHERE recipe_id = ?",
+            r#"SELECT
+                id as "id: uuid::Uuid",
+                recipe_id as "recipe_id: uuid::Uuid",
+                position,
+                description
+            FROM recipe_ingredients 
+            WHERE recipe_id = ?"#,
             recipe_id
         )
         .fetch_all(&self.pool)
@@ -115,7 +150,13 @@ impl IRecipeRepository for SqlxRecipeRepository {
 
         let instructions = sqlx::query_as!(
             Instruction,
-            "SELECT * FROM instructions WHERE recipe_id = ?",
+            r#"SELECT
+                id as "id: uuid::Uuid",
+                recipe_id as "recipe_id: uuid::Uuid",
+                position,
+                description
+            FROM recipe_instructions 
+            WHERE recipe_id = ?"#,
             recipe_id
         )
         .fetch_all(&self.pool)
@@ -131,17 +172,18 @@ impl IRecipeRepository for SqlxRecipeRepository {
 
     async fn create(
         &self,
-        user_id: i32,
+        user_id: Uuid,
+        recipe_id: Uuid,
         request: RecipeRequest,
-    ) -> Result<Recipe, RepositoryError> {
+    ) -> Result<(), RepositoryError> {
         let mut tx = self.pool.begin().await?;
 
-        let id = sqlx::query_scalar!(
+        sqlx::query!(
             r#"
-            INSERT INTO recipes (name, author, description, difficulty, estimated_duration, is_public, user_id)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
-            RETURNING id
+            INSERT INTO recipes (id, name, author, description, difficulty, estimated_duration, is_public, user_id)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
             "#,
+            recipe_id,
             request.name,
             request.author,
             request.description,
@@ -153,18 +195,24 @@ impl IRecipeRepository for SqlxRecipeRepository {
         .await?;
 
         for ingredient in &request.ingredients {
+            let ingredient_id = Uuid::now_v7();
+
             sqlx::query!(
-                "INSERT INTO ingredients (recipe_id, position, description) VALUES (?, ?, ?)",
-                id,
+                "INSERT INTO recipe_ingredients (id, recipe_id, position, description) VALUES (?, ?, ?, ?)",
+                ingredient_id,
+                recipe_id,
                 ingredient.position,
                 ingredient.description)
             .execute(&mut *tx).await?;
         }
 
         for instruction in &request.instructions {
+            let instruction_id = Uuid::now_v7();
+
             sqlx::query!(
-                "INSERT INTO instructions (recipe_id, position, description) VALUES (?, ?, ?)",
-                id,
+                "INSERT INTO recipe_instructions (id, recipe_id, position, description) VALUES (?, ?, ?, ?)",
+                instruction_id,
+                recipe_id,
                 instruction.position,
                 instruction.description)
             .execute(&mut *tx).await?;
@@ -172,22 +220,26 @@ impl IRecipeRepository for SqlxRecipeRepository {
 
         tx.commit().await?;
 
-        self.get_by_id(id).await
+        Ok(())
     }
 
     async fn update(
         &self,
-        recipe_id: i32,
+        recipe_id: Uuid,
         request: RecipeRequest,
-    ) -> Result<Recipe, RepositoryError> {
+    ) -> Result<(), RepositoryError> {
         let mut tx = self.pool.begin().await?;
 
         // Update the recipe header
         sqlx::query!(
             r#"
             UPDATE recipes
-            SET name = ?, author = ?, description = ?, difficulty = ?,
-                estimated_duration = ?, is_public = ?
+            SET name = ?, 
+                author = ?, 
+                description = ?, 
+                difficulty = ?,
+                estimated_duration = ?, 
+                is_public = ?
             WHERE id = ?
             "#,
             request.name,
@@ -203,14 +255,14 @@ impl IRecipeRepository for SqlxRecipeRepository {
 
         // Delete old ingredients and instructions
         sqlx::query!(
-            "DELETE FROM ingredients WHERE recipe_id = ?",
+            "DELETE FROM recipe_ingredients WHERE recipe_id = ?",
             recipe_id
         )
         .execute(&mut *tx)
         .await?;
 
         sqlx::query!(
-            "DELETE FROM instructions WHERE recipe_id = ?",
+            "DELETE FROM recipe_instructions WHERE recipe_id = ?",
             recipe_id
         )
         .execute(&mut *tx)
@@ -218,8 +270,10 @@ impl IRecipeRepository for SqlxRecipeRepository {
 
         // Insert new ingredients
         for ingredient in &request.ingredients {
+            let id = Uuid::now_v7();
             sqlx::query!(
-                "INSERT INTO ingredients (recipe_id, position, description) VALUES (?, ?, ?)",
+                "INSERT INTO recipe_ingredients (id, recipe_id, position, description) VALUES (?, ?, ?, ?)",
+                id,
                 recipe_id,
                 ingredient.position,
                 ingredient.description
@@ -230,8 +284,10 @@ impl IRecipeRepository for SqlxRecipeRepository {
 
         // Insert new instructions
         for instruction in &request.instructions {
+            let id = Uuid::now_v7();
             sqlx::query!(
-                "INSERT INTO instructions (recipe_id, position, description) VALUES (?, ?, ?)",
+                "INSERT INTO recipe_instructions (id, recipe_id, position, description) VALUES (?, ?, ?, ?)",
+                id,
                 recipe_id,
                 instruction.position,
                 instruction.description
@@ -241,13 +297,11 @@ impl IRecipeRepository for SqlxRecipeRepository {
         }
 
         tx.commit().await?;
-
-        // Fetch and return the complete recipe
-        self.get_by_id(recipe_id).await
+        Ok(())
     }
 
-    async fn delete(&self, recipe_id: i32) -> Result<(), RepositoryError> {
-        sqlx::query!("DELETE FROM recipes.recipes WHERE id = ?", recipe_id)
+    async fn delete(&self, recipe_id: Uuid) -> Result<(), RepositoryError> {
+        sqlx::query!("DELETE FROM recipes WHERE id = ?", recipe_id)
             .execute(&self.pool)
             .await?;
 
@@ -269,13 +323,31 @@ impl SqlxIngredientRepository {
 impl IIngredientRepository for SqlxIngredientRepository {
     async fn get_all_by_recipe_ids(
         &self,
-        recipe_ids: &[i32],
+        recipe_ids: &[Uuid],
     ) -> Result<Vec<Ingredient>, RepositoryError> {
-        let ingredients: Vec<Ingredient> =
-            sqlx::query_as("SELECT * FROM recipes.ingredients WHERE recipe_id = ANY($1)")
-                .bind(recipe_ids)
-                .fetch_all(&self.pool)
-                .await?;
+        if recipe_ids.is_empty() {
+            return Ok(Vec::new());
+        }
+
+        let params = vec!["?"; recipe_ids.len()].join(", ");
+        let query_string = format!(
+            r#"SELECT 
+                id as "id: uuid::Uuid",
+                recipe_id as "recipe_id: uuid::Uuid",
+                position,
+                description
+            FROM recipe_ingredients
+            WHERE recipe_id IN ({})"#,
+            params
+        );
+
+        let mut query = sqlx::query_as::<_, Ingredient>(&query_string);
+
+        for id in recipe_ids {
+            query = query.bind(id);
+        }
+
+        let ingredients: Vec<Ingredient> = query.fetch_all(&self.pool).await?;
 
         Ok(ingredients)
     }
@@ -295,13 +367,31 @@ impl SqlxInstructionRepository {
 impl IInstructionRepository for SqlxInstructionRepository {
     async fn get_all_by_recipe_ids(
         &self,
-        recipe_ids: &[i32],
+        recipe_ids: &[Uuid],
     ) -> Result<Vec<Instruction>, RepositoryError> {
-        let instructions: Vec<Instruction> =
-            sqlx::query_as("SELECT * FROM recipes.instructions WHERE recipe_id = ANY($1)")
-                .bind(recipe_ids)
-                .fetch_all(&self.pool)
-                .await?;
+        if recipe_ids.is_empty() {
+            return Ok(Vec::new());
+        }
+
+        let params = vec!["?"; recipe_ids.len()].join(", ");
+        let query_string = format!(
+            r#"SELECT 
+                id as "id: uuid::Uuid",
+                recipe_id as "recipe_id: uuid::Uuid",
+                position,
+                description
+            FROM recipe_instructions 
+            WHERE recipe_id IN ({})"#,
+            params
+        );
+
+        let mut query = sqlx::query_as::<_, Instruction>(&query_string);
+
+        for id in recipe_ids {
+            query = query.bind(id);
+        }
+
+        let instructions: Vec<Instruction> = query.fetch_all(&self.pool).await?;
 
         Ok(instructions)
     }

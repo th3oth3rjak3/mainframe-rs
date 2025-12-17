@@ -2,10 +2,12 @@ mod auth;
 mod database;
 mod errors;
 mod recipes;
+mod roles;
 mod services;
 mod sessions;
 mod shared_models;
 mod users;
+mod authentication;
 
 use axum::Router;
 use database::Database;
@@ -17,6 +19,7 @@ use tokio::net::TcpListener;
 use tower_http::services::{ServeDir, ServeFile};
 use tracing_subscriber::EnvFilter;
 use users::router as user_router;
+use authentication::router as auth_router;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -33,6 +36,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let app = Router::new()
         .nest("/api/recipes", recipe_router())
         .nest("/api/users", user_router())
+        .nest("/api/auth", auth_router())
         .fallback_service(
             ServeDir::new("static").not_found_service(ServeFile::new("static/index.html")),
         )

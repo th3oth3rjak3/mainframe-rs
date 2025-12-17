@@ -1,158 +1,83 @@
 use axum::{
     Json, Router,
     extract::{Path, State},
+    http::HeaderValue,
     response::IntoResponse,
-    routing::{get, post, put},
+    routing::{get, put},
 };
-use axum_extra::extract::{
-    CookieJar,
-    cookie::{self, Cookie},
-};
-use time::Duration;
+
+use hyper::{HeaderMap, StatusCode, header};
+use uuid::Uuid;
 
 use crate::{
-    auth::{AdminUser, AuthUser},
+    auth::AdminUser,
+    authentication::AuthenticatedUser,
     errors::ApiError,
     services::ServiceContainer,
-    users::{CreateUserRequest, LoginRequest, UpdateUserRequest, UserResponse},
+    users::{CreateUserRequest, UpdateUserRequest, UserBaseResponse, UserResponse},
 };
 
 pub fn router() -> Router<ServiceContainer> {
     Router::new()
         .route("/", get(get_all_users).post(create_user))
         .route("/{id}", get(get_by_id).put(update_user).delete(delete_user))
-        .route("/self", put(update_self).get(get_self))
-        .route("/login", post(login))
-        .route("/logout", post(logout))
+        .route("/self", put(update_self))
 }
 
 pub async fn get_all_users(
     _: AdminUser,
     State(container): State<ServiceContainer>,
-) -> Result<Json<Vec<UserResponse>>, ApiError> {
+) -> Result<Json<Vec<UserBaseResponse>>, ApiError> {
     let users = container.user_service().get_all().await?;
     Ok(Json(users))
 }
 
 pub async fn get_by_id(
     _: AdminUser,
-    Path(id): Path<i32>,
+    Path(id): Path<Uuid>,
     State(container): State<ServiceContainer>,
 ) -> Result<Json<UserResponse>, ApiError> {
     let user = container.user_service().get_by_id(id).await?;
     Ok(Json(user))
 }
 
-pub async fn get_self(
-    auth: AuthUser,
-    State(container): State<ServiceContainer>,
-) -> Result<impl IntoResponse, ApiError> {
-    let (new_session, user) = container
-        .session_service()
-        .refresh_session(auth.session.id)
-        .await?;
-
-    let cookie = Cookie::build(("session_id", new_session.id.to_string()))
-        .path("/")
-        .http_only(true)
-        .secure(true)
-        .same_site(cookie::SameSite::Strict)
-        .max_age(Duration::days(1))
-        .build();
-
-    let jar = CookieJar::new().add(cookie);
-
-    Ok((jar, Json(user)))
-}
-
 pub async fn create_user(
     _: AdminUser,
     State(container): State<ServiceContainer>,
     Json(req): Json<CreateUserRequest>,
-) -> Result<Json<UserResponse>, ApiError> {
-    let user = container.user_service().create(req).await?;
-    Ok(Json(user))
+) -> Result<impl IntoResponse, ApiError> {
+    let user_id = container.user_service().create(req).await?;
+    let location_str = format!("/users/{}", user_id);
+    let location = HeaderValue::from_str(&location_str).map_err(|err| anyhow::anyhow!(err))?;
+    let mut headers = HeaderMap::new();
+    headers.insert(header::LOCATION, location);
+    Ok((StatusCode::CREATED, headers))
 }
 
 pub async fn update_user(
     _: AdminUser,
-    Path(id): Path<i32>,
+    Path(id): Path<Uuid>,
     State(container): State<ServiceContainer>,
     Json(req): Json<UpdateUserRequest>,
-) -> Result<Json<UserResponse>, ApiError> {
-    let user = container.user_service().update(id, req).await?;
-    Ok(Json(user))
+) -> Result<impl IntoResponse, ApiError> {
+    container.user_service().update(id, req).await?;
+    Ok(StatusCode::NO_CONTENT)
 }
 
 pub async fn update_self(
-    auth: AuthUser,
+    auth: AuthenticatedUser,
     State(container): State<ServiceContainer>,
     Json(req): Json<UpdateUserRequest>,
-) -> Result<Json<UserResponse>, ApiError> {
-    let user = container.user_service().update(auth.user.id, req).await?;
-    Ok(Json(user))
+) -> Result<impl IntoResponse, ApiError> {
+    container.user_service().update(auth.user.id, req).await?;
+    Ok(StatusCode::NO_CONTENT)
 }
 
 pub async fn delete_user(
     _: AdminUser,
-    Path(id): Path<i32>,
+    Path(id): Path<Uuid>,
     State(container): State<ServiceContainer>,
-) -> Result<(), ApiError> {
+) -> Result<impl IntoResponse, ApiError> {
     container.user_service().delete(id).await?;
-    Ok(())
-}
-
-pub async fn login(
-    State(container): State<ServiceContainer>,
-    Json(login): Json<LoginRequest>,
-) -> Result<impl IntoResponse, ApiError> {
-    // lazily delete expired sessions when someone tries to login
-    container
-        .session_service()
-        .cleanup_expired_sessions()
-        .await?;
-
-    // verify login credentials and update last login timestamp
-    let user = container.user_service().login(login).await?;
-
-    // create login session
-    let session = container.session_service().create_session(user.id).await?;
-
-    // create cookie with session id
-    let cookie = Cookie::build(("session_id", session.id.to_string()))
-        .path("/")
-        .http_only(true)
-        .secure(true)
-        .same_site(cookie::SameSite::Strict)
-        .max_age(Duration::days(1))
-        .build();
-
-    let jar = CookieJar::new().add(cookie);
-
-    Ok((jar, Json(user)))
-}
-
-pub async fn logout(
-    auth: AuthUser,
-    State(container): State<ServiceContainer>,
-) -> Result<impl IntoResponse, ApiError> {
-    container
-        .session_service()
-        .delete_session(auth.session.id)
-        .await?;
-
-    let cookie = Cookie::build(("session_id", ""))
-        .path("/")
-        .http_only(true)
-        .secure(true)
-        .same_site(cookie::SameSite::Strict)
-        .max_age(Duration::seconds(-1))
-        .build();
-
-    let cookie_jar = CookieJar::new().add(cookie);
-
-    Ok((
-        cookie_jar,
-        Json(serde_json::json!({"message": "Logged out successfully"})),
-    ))
+    Ok(StatusCode::NO_CONTENT)
 }

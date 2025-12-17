@@ -9,7 +9,7 @@ CREATE TABLE users (
     last_login DATETIME,
     failed_login_attempts INTEGER NOT NULL DEFAULT 0,
     last_failed_login_attempt DATETIME,
-    is_disabled INTEGER DEFAULT 0,
+    is_disabled BOOLEAN NOT NULL DEFAULT false,
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
 );

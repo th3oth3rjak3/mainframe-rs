@@ -5,21 +5,19 @@ use uuid::Uuid;
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Session {
     pub id: Uuid,
-    pub user_id: i32,
-    pub created_at: OffsetDateTime,
+    pub user_id: Uuid,
     pub expires_at: OffsetDateTime,
 }
 
 impl Session {
-    pub fn new(user_id: i32) -> Self {
-        Self::new_with_duration(user_id, Duration::days(1))
+    pub fn new(user_id: Uuid) -> Self {
+        Self::new_with_duration(user_id, Duration::hours(2))
     }
 
-    pub fn new_with_duration(user_id: i32, duration: Duration) -> Self {
+    pub fn new_with_duration(user_id: Uuid, duration: Duration) -> Self {
         Self {
-            id: Uuid::new_v4(),
+            id: Uuid::now_v7(),
             user_id,
-            created_at: OffsetDateTime::now_utc(),
             expires_at: OffsetDateTime::now_utc().saturating_add(duration),
         }
     }

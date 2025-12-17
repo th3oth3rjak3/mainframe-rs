@@ -3,10 +3,16 @@ use axum::Router;
 use axum::extract::Path;
 use axum::extract::Query;
 use axum::extract::State;
+use axum::http::HeaderValue;
+use axum::response::IntoResponse;
 use axum::routing::get;
+use hyper::HeaderMap;
+use hyper::StatusCode;
+use hyper::header;
 use serde::{self, Deserialize};
+use uuid::Uuid;
 
-use crate::auth::AuthUser;
+use crate::authentication::AuthenticatedUser;
 use crate::errors::ApiError;
 use crate::recipes::Recipe;
 use crate::recipes::RecipeRequest;
@@ -40,7 +46,7 @@ pub fn router() -> Router<ServiceContainer> {
 }
 
 pub async fn get_all_recipes(
-    auth: AuthUser,
+    auth: AuthenticatedUser,
     State(container): State<ServiceContainer>,
     Query(filters): Query<RecipeFilters>,
 ) -> Result<Json<PaginatedResponse<Recipe>>, ApiError> {
@@ -58,8 +64,8 @@ pub async fn get_all_recipes(
 }
 
 pub async fn get_by_id(
-    auth: AuthUser,
-    Path(id): Path<i32>,
+    auth: AuthenticatedUser,
+    Path(id): Path<Uuid>,
     State(container): State<ServiceContainer>,
 ) -> Result<Json<Recipe>, ApiError> {
     let recipe = container
@@ -71,41 +77,45 @@ pub async fn get_by_id(
 }
 
 pub async fn create_recipe(
-    auth: AuthUser,
+    auth: AuthenticatedUser,
     State(container): State<ServiceContainer>,
     Json(request): Json<RecipeRequest>,
-) -> Result<Json<Recipe>, ApiError> {
-    let recipe = container
+) -> Result<impl IntoResponse, ApiError> {
+    let recipe_id = container
         .recipe_service()
         .create_recipe(auth.user.id, request)
         .await?;
 
-    Ok(Json(recipe))
+    let location_str = format!("/recipes/{}", recipe_id);
+    let location = HeaderValue::from_str(&location_str).map_err(|err| anyhow::anyhow!(err))?;
+    let mut headers = HeaderMap::new();
+    headers.insert(header::LOCATION, location);
+    Ok((StatusCode::CREATED, headers))
 }
 
 pub async fn update_recipe(
-    auth: AuthUser,
+    auth: AuthenticatedUser,
     State(container): State<ServiceContainer>,
-    Path(id): Path<i32>,
+    Path(id): Path<Uuid>,
     Json(request): Json<RecipeRequest>,
-) -> Result<Json<Recipe>, ApiError> {
-    let recipe = container
+) -> Result<impl IntoResponse, ApiError> {
+    container
         .recipe_service()
         .update_recipe(id, auth.user.id, request)
         .await?;
 
-    Ok(Json(recipe))
+    Ok(StatusCode::NO_CONTENT)
 }
 
 pub async fn delete_recipe(
-    auth: AuthUser,
+    auth: AuthenticatedUser,
     State(container): State<ServiceContainer>,
-    Path(id): Path<i32>,
-) -> Result<(), ApiError> {
+    Path(id): Path<Uuid>,
+) -> Result<impl IntoResponse, ApiError> {
     container
         .recipe_service()
         .delete_recipe(id, auth.user.id)
         .await?;
 
-    Ok(())
+    Ok(StatusCode::NO_CONTENT)
 }

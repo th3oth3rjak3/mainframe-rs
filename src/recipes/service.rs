@@ -1,6 +1,6 @@
-use async_trait::async_trait;
+use uuid::Uuid;
 
-use crate::errors::ApiError;
+use crate::errors::ServiceError;
 use crate::recipes::{
     IIngredientRepository, IInstructionRepository, IRecipeRepository, Ingredient, Instruction,
     Recipe, RecipeRequest,
@@ -8,34 +8,37 @@ use crate::recipes::{
 use crate::shared_models::PaginatedResponse;
 use std::sync::Arc;
 
-#[async_trait]
+#[async_trait::async_trait]
 pub trait IRecipeService: Send + Sync {
     /// Get all recipes that belong to the current user and any recipes that are public.
     async fn get_user_and_public_recipes(
         &self,
-        user_id: i32,
+        user_id: Uuid,
         page: i64,
         page_size: i64,
         name_query: Option<&str>,
-    ) -> Result<PaginatedResponse<Recipe>, ApiError>;
+    ) -> Result<PaginatedResponse<Recipe>, ServiceError>;
 
     /// Get a recipe by its id.
-    async fn get_by_id(&self, recipe_id: i32, user_id: i32) -> Result<Recipe, ApiError>;
+    async fn get_by_id(&self, recipe_id: Uuid, user_id: Uuid) -> Result<Recipe, ServiceError>;
 
     /// Create a new recipe for the user with the given `user_id`.
-    async fn create_recipe(&self, user_id: i32, request: RecipeRequest)
-    -> Result<Recipe, ApiError>;
+    async fn create_recipe(
+        &self,
+        user_id: Uuid,
+        request: RecipeRequest,
+    ) -> Result<Uuid, ServiceError>;
 
     /// Update an existing recipe when the user owns it.
     async fn update_recipe(
         &self,
-        recipe_id: i32,
-        user_id: i32,
+        recipe_id: Uuid,
+        user_id: Uuid,
         request: RecipeRequest,
-    ) -> Result<Recipe, ApiError>;
+    ) -> Result<(), ServiceError>;
 
     /// Delete a recipe only when the user owns it.
-    async fn delete_recipe(&self, recipe_id: i32, user_id: i32) -> Result<(), ApiError>;
+    async fn delete_recipe(&self, recipe_id: Uuid, user_id: Uuid) -> Result<(), ServiceError>;
 }
 
 #[derive(Clone)]
@@ -59,17 +62,17 @@ impl RecipeService {
     }
 }
 
-#[async_trait]
+#[async_trait::async_trait]
 impl IRecipeService for RecipeService {
     async fn get_user_and_public_recipes(
         &self,
-        user_id: i32,
+        user_id: Uuid,
         page: i64,
         page_size: i64,
         name_query: Option<&str>,
-    ) -> Result<PaginatedResponse<Recipe>, ApiError> {
+    ) -> Result<PaginatedResponse<Recipe>, ServiceError> {
         if page_size <= 0 {
-            return Err(ApiError::bad_request("page size must be > 0"));
+            return Err(ServiceError::BadRequest("invalid page size".into()));
         }
 
         // Get paginated recipe bases and total count from repository
@@ -90,7 +93,7 @@ impl IRecipeService for RecipeService {
         }
 
         // Collect recipe IDs
-        let recipe_ids: Vec<i32> = recipe_bases.iter().map(|r| r.id).collect();
+        let recipe_ids: Vec<Uuid> = recipe_bases.iter().map(|r| r.id).collect();
 
         // Fetch ingredients and instructions in parallel
         let (ingredients, instructions) = tokio::try_join!(
@@ -129,8 +132,6 @@ impl IRecipeService for RecipeService {
             })
             .collect();
 
-        // We verified that page_size is non-zero above.
-        #[allow(clippy::arithmetic_side_effects)]
         let total_pages = (total + page_size - 1) / page_size;
 
         Ok(PaginatedResponse {
@@ -142,7 +143,7 @@ impl IRecipeService for RecipeService {
         })
     }
 
-    async fn get_by_id(&self, recipe_id: i32, user_id: i32) -> Result<Recipe, ApiError> {
+    async fn get_by_id(&self, recipe_id: Uuid, user_id: Uuid) -> Result<Recipe, ServiceError> {
         let recipe = self.recipes.get_by_id(recipe_id).await?;
 
         if recipe.is_public || recipe.user_id == user_id {
@@ -150,41 +151,55 @@ impl IRecipeService for RecipeService {
         } else {
             // If a recipe exists but a user doesn't own it or it isn't public, don't give away that information.
             // Just tell the user it wasn't found to prevent traversal attacks.
-            Err(ApiError::not_found())
+            Err(ServiceError::NotFound {
+                entity: "recipe",
+                property: "id",
+                value: recipe_id.to_string(),
+            })
         }
     }
 
     async fn create_recipe(
         &self,
-        user_id: i32,
+        user_id: Uuid,
         request: RecipeRequest,
-    ) -> Result<Recipe, ApiError> {
-        let recipe = self.recipes.create(user_id, request).await?;
-        Ok(recipe)
+    ) -> Result<Uuid, ServiceError> {
+        let recipe_id = Uuid::now_v7();
+        self.recipes.create(user_id, recipe_id, request).await?;
+        Ok(recipe_id)
     }
 
     async fn update_recipe(
         &self,
-        recipe_id: i32,
-        user_id: i32,
+        recipe_id: Uuid,
+        user_id: Uuid,
         request: RecipeRequest,
-    ) -> Result<Recipe, ApiError> {
+    ) -> Result<(), ServiceError> {
         let recipe = self.recipes.get_by_id(recipe_id).await?;
         if recipe.user_id != user_id {
-            return Err(ApiError::not_found());
+            return Err(ServiceError::NotFound {
+                entity: "recipe",
+                property: "id",
+                value: recipe_id.to_string(),
+            });
         }
 
-        let updated = self.recipes.update(recipe_id, request).await?;
-        Ok(updated)
+        self.recipes.update(recipe_id, request).await?;
+        
+        Ok(())
     }
 
-    async fn delete_recipe(&self, recipe_id: i32, user_id: i32) -> Result<(), ApiError> {
+    async fn delete_recipe(&self, recipe_id: Uuid, user_id: Uuid) -> Result<(), ServiceError> {
         let recipe = self.recipes.get_by_id(recipe_id).await?;
 
         if recipe.user_id != user_id {
             // If a recipe exists but a user doesn't own it, don't give away that information.
             // Just tell the user it wasn't found to prevent traversal attacks.
-            return Err(ApiError::not_found());
+            return Err(ServiceError::NotFound {
+                entity: "recipe",
+                property: "id",
+                value: recipe_id.to_string(),
+            });
         }
 
         self.recipes.delete(recipe_id).await?;

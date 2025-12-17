@@ -1,123 +1,200 @@
-use std::fmt::Display;
+//! Defines the error handling architecture for the application.
+//!
+//! This module implements a three-tiered error system to create a clean separation
+//! between the data access, business logic, and web layers.
+//!
+//! - `RepositoryError`: For failures in the data access layer.
+//! - `ServiceError`: For failures in the business logic (service) layer.
+//! - `ApiError`: For representing errors at the HTTP boundary, responsible for
+//!   generating appropriate log messages and client-facing responses.
 
-use axum::http::StatusCode;
-use axum::response::{IntoResponse, Response};
+use axum::{
+    Json,
+    http::StatusCode,
+    response::{IntoResponse, Response},
+};
 use serde::Serialize;
+use std::fmt::Debug;
 use thiserror::Error;
 
+/// The structured, public-facing error response sent to API clients.
+///
+/// This struct is serialized to JSON and provides a consistent error format
+/// for all client-facing errors, without leaking internal implementation details.
 #[derive(Debug, Serialize)]
 pub struct ErrorResponse {
     pub error: String,
 }
 
-impl Display for ErrorResponse {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.write_str(&self.error)
-    }
-}
-
-#[derive(Debug)]
+/// The primary error type for the Axum HTTP boundary.
+///
+/// This enum acts as an "anti-corruption layer," decoupling the web framework
+/// from the application's internal error types (`ServiceError`). Its sole
+/// responsibility is to be converted into an HTTP `Response`.
+#[derive(Debug, Error)]
 pub enum ApiError {
-    NotFound(ErrorResponse),
-    BadRequest(ErrorResponse),
-    Internal(ErrorResponse),
-    Unauthorized(ErrorResponse),
-    Forbidden(ErrorResponse),
+    #[error("NotFound: {entity} with {property} {value} not found")]
+    NotFound {
+        entity: &'static str,
+        property: &'static str,
+        value: String,
+    },
+    #[error("Bad Request: {0}")]
+    BadRequest(String),
+    #[error("Unauthorized")]
+    Unauthorized {
+        /// The internal reason for the failure, used for logging.
+        reason: String,
+    },
+    #[error("Forbidden")]
+    Forbidden {
+        /// The internal reason for the failure, used for logging.
+        reason: String,
+    },
+    #[error("An internal server error occurred")]
+    Internal(#[from] anyhow::Error),
 }
 
-impl ApiError {
-    pub fn internal(msg: impl Into<String>) -> Self {
-        Self::Internal(ErrorResponse { error: msg.into() })
-    }
-
-    pub fn not_found() -> Self {
-        Self::NotFound(ErrorResponse {
-            error: "Not Found".into(),
-        })
-    }
-
-    pub fn bad_request(msg: impl Into<String>) -> Self {
-        Self::BadRequest(ErrorResponse { error: msg.into() })
-    }
-
-    pub fn unauthorized() -> Self {
-        Self::Unauthorized(ErrorResponse {
-            error: "Unauthorized".into(),
-        })
-    }
-
-    pub fn forbidden() -> Self {
-        Self::Forbidden(ErrorResponse {
-            error: "Forbidden".into(),
-        })
-    }
-}
-
-impl Display for ApiError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Self::NotFound(r)
-            | Self::BadRequest(r)
-            | Self::Internal(r)
-            | Self::Unauthorized(r)
-            | Self::Forbidden(r) => f.write_str(&r.error),
-        }
-    }
-}
-
-impl From<anyhow::Error> for ApiError {
-    fn from(value: anyhow::Error) -> Self {
-        Self::internal(value.to_string())
-    }
-}
-
-impl From<RepositoryError> for ApiError {
-    fn from(err: RepositoryError) -> Self {
+/// Converts a `ServiceError` into the appropriate `ApiError`.
+///
+/// This implementation serves as the bridge between the application's business
+/// logic and its web layer, allowing for seamless error propagation with the `?`
+/// operator in Axum handlers.
+impl From<ServiceError> for ApiError {
+    fn from(err: ServiceError) -> Self {
         match err {
-            RepositoryError::Database(e) => {
-                tracing::error!("Database error: {e}");
-                Self::internal("Database error")
-            }
-            RepositoryError::Unauthorized => Self::unauthorized(),
-            RepositoryError::NotFound => Self::not_found(),
-            RepositoryError::Validation(msg) => Self::bad_request(msg),
-            RepositoryError::Other(msg) => {
-                tracing::error!("Unexpected error: {msg}");
-                Self::internal(msg)
-            }
+            ServiceError::Unauthorized(reason) => Self::Unauthorized { reason },
+            ServiceError::AccountLocked => Self::Unauthorized { reason: err.to_string() },
+            ServiceError::InvalidUsernameOrPassword => Self::Unauthorized { reason: err.to_string() },
+            ServiceError::Forbidden(reason) => Self::Forbidden { reason },
+            ServiceError::BadRequest(msg) => Self::BadRequest(msg),
+            ServiceError::Repository(repo_err) => match repo_err {
+                RepositoryError::NotFound {
+                    entity,
+                    property,
+                    value,
+                } => Self::NotFound {
+                    entity,
+                    property,
+                    value,
+                },
+                RepositoryError::Database(e) => Self::Internal(e.into()),
+            },
+            ServiceError::NotFound {
+                entity,
+                property,
+                value,
+            } => Self::NotFound {
+                entity,
+                property,
+                value,
+            },
+            ServiceError::Internal(e) => Self::Internal(e),
         }
     }
 }
 
-// Convert to Axum response
+/// Converts an `ApiError` into a user-facing HTTP `Response`.
+///
+/// This is the single point of truth for all error handling at the application
+/// boundary. It is responsible for:
+/// 1.  Mapping the `ApiError` variant to the correct `StatusCode`.
+/// 2.  Performing structured logging with `tracing`.
+/// 3.  Ensuring sensitive details are logged but not sent to the client.
+/// 4.  Serializing a public-facing `ErrorResponse` as the JSON response body.
 impl IntoResponse for ApiError {
     fn into_response(self) -> Response {
-        let (status, body) = match self {
-            Self::NotFound(e) => (StatusCode::NOT_FOUND, e.to_string()),
-            Self::BadRequest(e) => (StatusCode::BAD_REQUEST, e.to_string()),
-            Self::Internal(e) => (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()),
-            Self::Unauthorized(e) => (StatusCode::UNAUTHORIZED, e.to_string()),
-            Self::Forbidden(e) => (StatusCode::FORBIDDEN, e.to_string()),
+        let (status, log_as_error) = match &self {
+            Self::Internal(_) => (StatusCode::INTERNAL_SERVER_ERROR, true),
+            Self::NotFound { .. } => (StatusCode::NOT_FOUND, false),
+            Self::BadRequest(_) => (StatusCode::BAD_REQUEST, false),
+            Self::Unauthorized { .. } => (StatusCode::UNAUTHORIZED, false),
+            Self::Forbidden { .. } => (StatusCode::FORBIDDEN, false),
         };
+
+        if log_as_error {
+            // For 5xx errors, log the full `Debug` representation, including the source chain.
+            tracing::error!(error = ?self, "Request failed with a server error");
+        } else {
+            // For 4xx errors, log the specific reason for auth failures, or the
+            // general error for other client issues.
+            match &self {
+                Self::Unauthorized { reason } => {
+                    tracing::warn!(reason = %reason, "Unauthorized access attempt");
+                }
+                Self::Forbidden { reason } => {
+                    tracing::warn!(reason = %reason, "Forbidden access attempt");
+                }
+                _ => {
+                    tracing::info!(error = %self, "Request failed with a client error");
+                }
+            }
+        }
+
+        // Create the public-facing JSON response, ensuring no sensitive reasons are included.
+        let public_error_message = match self {
+            Self::Internal(_) => "An internal server error occurred".to_string(),
+            Self::Unauthorized { .. } => "Unauthorized".to_string(),
+            Self::Forbidden { .. } => "Forbidden".to_string(),
+            _ => self.to_string(),
+        };
+
+        let body = Json(ErrorResponse {
+            error: public_error_message,
+        });
+
         (status, body).into_response()
     }
 }
 
+/// Represents failures within the application's service (business logic) layer.
+///
+/// This error enum should have no knowledge of HTTP-specific concepts. It is
+/// used to represent business rule violations, authorization failures, and to
+/// wrap errors from the underlying repository layer.
 #[derive(Debug, Error)]
-#[allow(unused)]
+pub enum ServiceError {
+    #[error("unauthorized: {0}")]
+    Unauthorized(String),
+
+    #[error("invalid username or password")]
+    InvalidUsernameOrPassword,
+
+    #[error("account locked due to repeated, failed login attempts")]
+    AccountLocked,
+
+    #[error("forbidden: {0}")]
+    Forbidden(String),
+
+    #[error("bad request: {0}")]
+    BadRequest(String),
+
+    #[error(transparent)]
+    Repository(#[from] RepositoryError),
+
+    #[error("{entity} with {property} {value} not found")]
+    NotFound {
+        entity: &'static str,
+        property: &'static str,
+        value: String,
+    },
+
+    #[error("internal service error")]
+    Internal(#[from] anyhow::Error),
+}
+
+/// Represents errors that occur within the data access (repository) layer.
+///
+/// This is the most foundational error type, concerned only with the state
+/// of data persistence, such as database connection issues or missing records.
+#[derive(Debug, Error)]
 pub enum RepositoryError {
     #[error("database error: {0}")]
     Database(#[from] sqlx::Error),
-
-    #[error("not found")]
-    NotFound,
-
-    #[error("not authorized")]
-    Unauthorized,
-
-    #[error("validation error: {0}")]
-    Validation(String),
-
-    #[error("other error: {0}")]
-    Other(String),
+    #[error("{entity} with {property} {value} not found")]
+    NotFound {
+        entity: &'static str,
+        property: &'static str,
+        value: String,
+    },
 }
