@@ -185,7 +185,7 @@ impl IRecipeService for RecipeService {
         }
 
         self.recipes.update(recipe_id, request).await?;
-        
+
         Ok(())
     }
 

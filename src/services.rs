@@ -1,8 +1,12 @@
 use crate::{
-    authentication::{AuthenticationService, IAuthenticationService, SqlxAuthenticationRepository}, recipes::{
+    authentication::{AuthenticationService, IAuthenticationService, SqlxAuthenticationRepository},
+    recipes::{
         IRecipeService, RecipeService, SqlxIngredientRepository, SqlxInstructionRepository,
         SqlxRecipeRepository,
-    }, roles::{IRoleService, RoleService, SqlxRoleRepository}, sessions::{ISessionService, SessionService, SqlxSessionRepository}, users::{IUserService, SqlxUserRepository, UserService}
+    },
+    roles::{IRoleService, RoleService, SqlxRoleRepository},
+    sessions::{ISessionService, SessionService, SqlxSessionRepository},
+    users::{IUserService, SqlxUserRepository, UserService},
 };
 
 use sqlx::SqlitePool;
@@ -25,7 +29,7 @@ impl ServiceContainer {
             users: Arc::new(Self::make_user_service(pool.clone())),
             sessions: Arc::new(Self::make_session_service(pool.clone())),
             roles: Arc::new(Self::make_role_service(pool.clone())),
-            auth: Arc::new(Self::make_authentication_service(pool))
+            auth: Arc::new(Self::make_authentication_service(pool)),
         }
     }
 
@@ -51,7 +55,7 @@ impl ServiceContainer {
 
     fn make_role_service(pool: SqlitePool) -> impl IRoleService {
         let role_repo = Arc::new(SqlxRoleRepository::new(pool));
-        
+
         RoleService::new(role_repo)
     }
 

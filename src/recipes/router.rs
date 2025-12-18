@@ -86,7 +86,7 @@ pub async fn create_recipe(
         .create_recipe(auth.user.id, request)
         .await?;
 
-    let location_str = format!("/recipes/{}", recipe_id);
+    let location_str = format!("/recipes/{recipe_id}");
     let location = HeaderValue::from_str(&location_str).map_err(|err| anyhow::anyhow!(err))?;
     let mut headers = HeaderMap::new();
     headers.insert(header::LOCATION, location);

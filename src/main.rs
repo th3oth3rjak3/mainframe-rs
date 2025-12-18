@@ -1,4 +1,5 @@
 mod auth;
+mod authentication;
 mod database;
 mod errors;
 mod recipes;
@@ -7,8 +8,8 @@ mod services;
 mod sessions;
 mod shared_models;
 mod users;
-mod authentication;
 
+use authentication::router as auth_router;
 use axum::Router;
 use database::Database;
 use dotenvy::dotenv;
@@ -19,7 +20,6 @@ use tokio::net::TcpListener;
 use tower_http::services::{ServeDir, ServeFile};
 use tracing_subscriber::EnvFilter;
 use users::router as user_router;
-use authentication::router as auth_router;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {

@@ -1,6 +1,9 @@
 use serde::{Deserialize, Serialize};
 
-use crate::{sessions::Session, users::{User, UserResponse}};
+use crate::{
+    sessions::Session,
+    users::{User, UserResponse},
+};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct LoginRequest {

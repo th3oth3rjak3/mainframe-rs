@@ -22,10 +22,10 @@ pub trait IAuthenticationService: Send + Sync {
 
 #[derive(Clone)]
 pub struct AuthenticationService {
-    auth_repo: Arc<dyn IAuthenticationRepository>,
-    user_repo: Arc<dyn IUserRepository>,
-    role_repo: Arc<dyn IRoleRepository>,
-    session_repo: Arc<dyn ISessionRepository>,
+    authentication: Arc<dyn IAuthenticationRepository>,
+    users: Arc<dyn IUserRepository>,
+    roles: Arc<dyn IRoleRepository>,
+    sessions: Arc<dyn ISessionRepository>,
 }
 
 impl AuthenticationService {
@@ -36,10 +36,10 @@ impl AuthenticationService {
         session_repo: Arc<dyn ISessionRepository>,
     ) -> Self {
         Self {
-            auth_repo,
-            user_repo,
-            role_repo,
-            session_repo,
+            authentication: auth_repo,
+            users: user_repo,
+            roles: role_repo,
+            sessions: session_repo,
         }
     }
 }
@@ -48,7 +48,7 @@ impl AuthenticationService {
 impl IAuthenticationService for AuthenticationService {
     async fn login(&self, request: LoginRequest) -> Result<AuthenticatedUser, ServiceError> {
         let mut user_base = self
-            .user_repo
+            .users
             .get_by_username(&request.username)
             .await
             .map_err(|err| {
@@ -74,46 +74,42 @@ impl IAuthenticationService for AuthenticationService {
 
             let session = Session::new(user_base.id);
 
-            let user = self.auth_repo.login(user_base, session).await?;
+            let user = self.authentication.login(user_base, session).await?;
             return Ok(user.into());
-        } else {
-            user_base.failed_login_attempts += 1;
-            user_base.last_failed_login_attempt = Some(OffsetDateTime::now_utc());
-            user_base.updated_at = OffsetDateTime::now_utc();
-
-            if user_base.failed_login_attempts >= MAX_FAILED_LOGIN_ATTEMPTS {
-                user_base.is_disabled = true;
-                self.session_repo.delete_all_for_user(user_base.id).await?;
-            }
-
-            self.user_repo.update_base(&user_base).await?;
-
-            if user_base.is_disabled {
-                return Err(ServiceError::AccountLocked);
-            }
-
-            return Err(ServiceError::InvalidUsernameOrPassword);
         }
+
+        user_base.failed_login_attempts += 1;
+        user_base.last_failed_login_attempt = Some(OffsetDateTime::now_utc());
+        user_base.updated_at = OffsetDateTime::now_utc();
+
+        if user_base.failed_login_attempts >= MAX_FAILED_LOGIN_ATTEMPTS {
+            user_base.is_disabled = true;
+            self.sessions.delete_all_for_user(user_base.id).await?;
+        }
+
+        self.users.update_base(&user_base).await?;
+
+        if user_base.is_disabled {
+            return Err(ServiceError::AccountLocked);
+        }
+
+        return Err(ServiceError::InvalidUsernameOrPassword);
     }
 
     async fn logout(&self, session_id: Uuid) -> Result<(), ServiceError> {
-        self.session_repo.delete(session_id).await?;
+        self.sessions.delete(session_id).await?;
         Ok(())
     }
 
     async fn refresh(&self, session_id: Uuid) -> Result<AuthenticatedUser, ServiceError> {
         // get a session
-        let mut session = self
-            .session_repo
-            .get_by_id(session_id)
-            .await
-            .map_err(|err| {
-                if let RepositoryError::NotFound { .. } = err {
-                    return ServiceError::Unauthorized("no valid session".into());
-                }
+        let mut session = self.sessions.get_by_id(session_id).await.map_err(|err| {
+            if let RepositoryError::NotFound { .. } = err {
+                return ServiceError::Unauthorized("no valid session".into());
+            }
 
-                return err.into();
-            })?;
+            err.into()
+        })?;
 
         // validate it's not expired
         if session.expires_at < OffsetDateTime::now_utc() {
@@ -121,19 +117,15 @@ impl IAuthenticationService for AuthenticationService {
         }
 
         // find the user
-        let user_base = self
-            .user_repo
-            .get_by_id(session.user_id)
-            .await
-            .map_err(|err| {
-                if let RepositoryError::NotFound { .. } = err {
-                    return ServiceError::Unauthorized(
-                        "user id from session token was not found".into(),
-                    );
-                }
+        let user_base = self.users.get_by_id(session.user_id).await.map_err(|err| {
+            if let RepositoryError::NotFound { .. } = err {
+                return ServiceError::Unauthorized(
+                    "user id from session token was not found".into(),
+                );
+            }
 
-                err.into()
-            })?;
+            err.into()
+        })?;
 
         if user_base.is_disabled {
             return Err(ServiceError::AccountLocked);
@@ -143,20 +135,16 @@ impl IAuthenticationService for AuthenticationService {
         session.expires_at = OffsetDateTime::now_utc().saturating_add(Duration::hours(2));
 
         // tell repo to save the details
-        self.session_repo.update(&session).await?;
+        self.sessions.update(&session).await?;
 
         let mut user: User = user_base.into();
-        let roles = self
-            .role_repo
-            .get_by_user_id(user.id)
-            .await
-            .map_err(|err| {
-                if let RepositoryError::NotFound { .. } = err {
-                    return ServiceError::Unauthorized("error getting roles for user".into());
-                }
+        let roles = self.roles.get_by_user_id(user.id).await.map_err(|err| {
+            if let RepositoryError::NotFound { .. } = err {
+                return ServiceError::Unauthorized("error getting roles for user".into());
+            }
 
-                err.into()
-            })?;
+            err.into()
+        })?;
 
         user.roles = roles;
 

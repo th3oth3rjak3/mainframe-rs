@@ -139,13 +139,13 @@ pub struct UserResponse {
 
 impl UserResponse {
     pub fn is_admin(&self) -> bool {
-        for r in self.roles.iter() {
+        for r in &self.roles {
             if r.name == RoleName::Administrator {
                 return true;
             }
         }
 
-        return false;
+        false
     }
 }
 

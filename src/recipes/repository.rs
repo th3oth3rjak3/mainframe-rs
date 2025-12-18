@@ -25,11 +25,7 @@ pub trait IRecipeRepository: Send + Sync {
         request: RecipeRequest,
     ) -> Result<(), RepositoryError>;
 
-    async fn update(
-        &self,
-        recipe_id: Uuid,
-        request: RecipeRequest,
-    ) -> Result<(), RepositoryError>;
+    async fn update(&self, recipe_id: Uuid, request: RecipeRequest) -> Result<(), RepositoryError>;
 
     async fn delete(&self, recipe_id: Uuid) -> Result<(), RepositoryError>;
 }
@@ -223,11 +219,7 @@ impl IRecipeRepository for SqlxRecipeRepository {
         Ok(())
     }
 
-    async fn update(
-        &self,
-        recipe_id: Uuid,
-        request: RecipeRequest,
-    ) -> Result<(), RepositoryError> {
+    async fn update(&self, recipe_id: Uuid, request: RecipeRequest) -> Result<(), RepositoryError> {
         let mut tx = self.pool.begin().await?;
 
         // Update the recipe header
@@ -337,8 +329,7 @@ impl IIngredientRepository for SqlxIngredientRepository {
                 position,
                 description
             FROM recipe_ingredients
-            WHERE recipe_id IN ({})"#,
-            params
+            WHERE recipe_id IN ({params})"#,
         );
 
         let mut query = sqlx::query_as::<_, Ingredient>(&query_string);
@@ -381,8 +372,7 @@ impl IInstructionRepository for SqlxInstructionRepository {
                 position,
                 description
             FROM recipe_instructions 
-            WHERE recipe_id IN ({})"#,
-            params
+            WHERE recipe_id IN ({params})"#,
         );
 
         let mut query = sqlx::query_as::<_, Instruction>(&query_string);

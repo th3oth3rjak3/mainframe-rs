@@ -64,8 +64,11 @@ impl From<ServiceError> for ApiError {
     fn from(err: ServiceError) -> Self {
         match err {
             ServiceError::Unauthorized(reason) => Self::Unauthorized { reason },
-            ServiceError::AccountLocked => Self::Unauthorized { reason: err.to_string() },
-            ServiceError::InvalidUsernameOrPassword => Self::Unauthorized { reason: err.to_string() },
+            ServiceError::AccountLocked | ServiceError::InvalidUsernameOrPassword => {
+                Self::Unauthorized {
+                    reason: err.to_string(),
+                }
+            }
             ServiceError::Forbidden(reason) => Self::Forbidden { reason },
             ServiceError::BadRequest(msg) => Self::BadRequest(msg),
             ServiceError::Repository(repo_err) => match repo_err {
@@ -153,6 +156,7 @@ impl IntoResponse for ApiError {
 /// used to represent business rule violations, authorization failures, and to
 /// wrap errors from the underlying repository layer.
 #[derive(Debug, Error)]
+#[allow(unused)]
 pub enum ServiceError {
     #[error("unauthorized: {0}")]
     Unauthorized(String),

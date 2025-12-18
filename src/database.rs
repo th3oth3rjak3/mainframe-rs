@@ -1,5 +1,8 @@
 use anyhow::anyhow;
-use sqlx::{SqlitePool, sqlite::{SqliteConnectOptions, SqliteJournalMode}};
+use sqlx::{
+    SqlitePool,
+    sqlite::{SqliteConnectOptions, SqliteJournalMode},
+};
 use std::{env, str::FromStr, time::Duration};
 
 pub struct Database {

@@ -155,7 +155,7 @@ impl IUserRepository for SqlxUserRepository {
         .await?;
 
         if result.rows_affected() == 0 {
-            return Err(RepositoryError::NotFound{
+            return Err(RepositoryError::NotFound {
                 entity: "user",
                 property: "id",
                 value: user.id.to_string(),
@@ -171,7 +171,7 @@ impl IUserRepository for SqlxUserRepository {
             .await?;
 
         if result.rows_affected() == 0 {
-            return Err(RepositoryError::NotFound{
+            return Err(RepositoryError::NotFound {
                 entity: "user",
                 property: "id",
                 value: id.to_string(),

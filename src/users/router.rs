@@ -47,7 +47,7 @@ pub async fn create_user(
     Json(req): Json<CreateUserRequest>,
 ) -> Result<impl IntoResponse, ApiError> {
     let user_id = container.user_service().create(req).await?;
-    let location_str = format!("/users/{}", user_id);
+    let location_str = format!("/users/{user_id}");
     let location = HeaderValue::from_str(&location_str).map_err(|err| anyhow::anyhow!(err))?;
     let mut headers = HeaderMap::new();
     headers.insert(header::LOCATION, location);
