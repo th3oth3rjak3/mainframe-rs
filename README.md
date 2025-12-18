@@ -133,6 +133,44 @@ The goal is to make private deployment straightforward without requiring complex
 - Admin and user management UI
 - Application-specific UIs
 
+## Milestone Checklist
+
+### Backend
+
+- [x] Basic HTTP server
+- [x] Cookie-based authentication (early)
+- [ ] Database schema design
+
+### Frontend
+
+- [x] Landing page scaffold
+- [ ] Basic routing for apps
+
+### Recipe Application
+
+- [ ] Private recipe CRUD
+- [ ] Public recipes
+- [ ] Group sharing
+- [ ] Optional collaborator editing
+
+### Calendar Application
+
+- [ ] Event creation and editing
+- [ ] Shared/group calendars
+- [ ] In-app notifications
+
+### Password Manager
+
+- [ ] Private vault per user
+- [ ] Encryption implementation
+- [ ] Shared/group vault handling (under design)
+
+### Lists Application
+
+- [ ] Generic list creation
+- [ ] Shared lists with permissions
+- [ ] Tagging/filter system
+
 ## License & Project Direction
 
 License: **TBD**
