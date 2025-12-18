@@ -173,7 +173,7 @@ The goal is to make private deployment straightforward without requiring complex
 
 ## License & Project Direction
 
-License: **TBD**
+This project is licensed under the [MIT License](./LICENSE).
 
 Mainframe is currently a personal project with long-term maintenance goals. Contributions may be considered in the future once the core architecture stabilizes.
 
