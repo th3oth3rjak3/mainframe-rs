@@ -10,9 +10,6 @@ use crate::{
 
 #[async_trait]
 pub trait ISessionRepository: Send + Sync {
-    /// Create a new user session in the database.
-    async fn create(&self, session: &Session) -> Result<(), RepositoryError>;
-
     /// Update the expiration of a session.
     async fn update(&self, session: &Session) -> Result<(), RepositoryError>;
 
@@ -20,7 +17,7 @@ pub trait ISessionRepository: Send + Sync {
     async fn delete(&self, id: Uuid) -> Result<(), RepositoryError>;
 
     /// Delete all expired sessions for cleanup purposes.
-    async fn delete_expired(&self) -> Result<(), RepositoryError>;
+    async fn delete_expired(&self) -> Result<u64, RepositoryError>;
 
     /// Delete all sessions for a given user.
     async fn delete_all_for_user(&self, user_id: Uuid) -> Result<(), RepositoryError>;
@@ -45,20 +42,6 @@ impl SqlxSessionRepository {
 
 #[async_trait]
 impl ISessionRepository for SqlxSessionRepository {
-    async fn create(&self, session: &Session) -> Result<(), RepositoryError> {
-        sqlx::query!(
-            r#"INSERT INTO sessions (id, user_id, expires_at)
-            VALUES (?, ?, ?)"#,
-            session.id,
-            session.user_id,
-            session.expires_at
-        )
-        .execute(&self.pool)
-        .await?;
-
-        Ok(())
-    }
-
     async fn update(&self, session: &Session) -> Result<(), RepositoryError> {
         sqlx::query!(
             r#"UPDATE sessions
@@ -82,12 +65,12 @@ impl ISessionRepository for SqlxSessionRepository {
         Ok(())
     }
 
-    async fn delete_expired(&self) -> Result<(), RepositoryError> {
-        sqlx::query!("DELETE FROM sessions WHERE expires_at < CURRENT_TIMESTAMP")
+    async fn delete_expired(&self) -> Result<u64, RepositoryError> {
+        let result = sqlx::query!("DELETE FROM sessions WHERE expires_at < CURRENT_TIMESTAMP")
             .execute(&self.pool)
             .await?;
 
-        Ok(())
+        Ok(result.rows_affected())
     }
 
     async fn delete_all_for_user(&self, user_id: Uuid) -> Result<(), RepositoryError> {
@@ -105,6 +88,7 @@ impl ISessionRepository for SqlxSessionRepository {
             SELECT
                 id AS "id: uuid::Uuid",
                 user_id AS "user_id: uuid::Uuid",
+                token,
                 expires_at
             FROM sessions
             WHERE id = ?

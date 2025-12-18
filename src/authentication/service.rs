@@ -8,6 +8,7 @@ use crate::{
     errors::{RepositoryError, ServiceError},
     roles::IRoleRepository,
     sessions::{ISessionRepository, Session},
+    token::{self, SessionToken},
     users::{IUserRepository, Password, User},
 };
 
@@ -17,7 +18,8 @@ const MAX_FAILED_LOGIN_ATTEMPTS: i64 = 5;
 pub trait IAuthenticationService: Send + Sync {
     async fn login(&self, request: LoginRequest) -> Result<AuthenticatedUser, ServiceError>;
     async fn logout(&self, session_id: Uuid) -> Result<(), ServiceError>;
-    async fn refresh(&self, session_id: Uuid) -> Result<AuthenticatedUser, ServiceError>;
+    async fn refresh(&self, session_token: SessionToken)
+    -> Result<AuthenticatedUser, ServiceError>;
 }
 
 #[derive(Clone)]
@@ -72,10 +74,25 @@ impl IAuthenticationService for AuthenticationService {
             user_base.last_failed_login_attempt = None;
             user_base.updated_at = OffsetDateTime::now_utc();
 
-            let session = Session::new(user_base.id);
+            let session_id = Uuid::now_v7();
+            let session_token = token::generate_session_token(session_id);
+
+            // Get HMAC key and hash the token for storage
+            let hmac_key_hex = std::env::var("SESSION_HMAC_KEY")
+                .map_err(|_| ServiceError::Internal(anyhow::anyhow!("HMAC key not configured")))?;
+            let hmac_key = hex::decode(hmac_key_hex)
+                .map_err(|_| ServiceError::Internal(anyhow::anyhow!("Invalid HMAC key format")))?;
+
+            let token_hash = session_token
+                .hash_token(&hmac_key)
+                .map_err(|_| ServiceError::Internal(anyhow::anyhow!("Failed to hash token")))?;
+
+            let session = Session::new(session_id, user_base.id, token_hash);
 
             let user = self.authentication.login(user_base, session).await?;
-            return Ok(user.into());
+            let mut auth_user: AuthenticatedUser = user.into();
+            auth_user.session.token = session_token.encode();
+            return Ok(auth_user);
         }
 
         user_base.failed_login_attempts += 1;
@@ -101,15 +118,40 @@ impl IAuthenticationService for AuthenticationService {
         Ok(())
     }
 
-    async fn refresh(&self, session_id: Uuid) -> Result<AuthenticatedUser, ServiceError> {
-        // get a session
-        let mut session = self.sessions.get_by_id(session_id).await.map_err(|err| {
-            if let RepositoryError::NotFound { .. } = err {
-                return ServiceError::Unauthorized("no valid session".into());
-            }
+    async fn refresh(
+        &self,
+        session_token: SessionToken,
+    ) -> Result<AuthenticatedUser, ServiceError> {
+        // Get the HMAC key from environment
+        let hmac_key_hex = std::env::var("SESSION_HMAC_KEY")
+            .map_err(|_| ServiceError::Internal(anyhow::anyhow!("HMAC key not configured")))?;
+        let hmac_key = hex::decode(hmac_key_hex)
+            .map_err(|_| ServiceError::Internal(anyhow::anyhow!("Invalid HMAC key format")))?;
 
-            err.into()
-        })?;
+        // get a session
+        let mut session = self
+            .sessions
+            .get_by_id(session_token.session_id)
+            .await
+            .map_err(|err| {
+                if let RepositoryError::NotFound { .. } = err {
+                    return ServiceError::Unauthorized("no valid session".into());
+                }
+
+                err.into()
+            })?;
+
+        // Verify the token hash matches what's stored
+        let is_valid = crate::token::verify_token(
+            &session_token.raw_token,
+            &session.token, // You'll need to add this field to your Session struct
+            &hmac_key,
+        )
+        .map_err(|_| ServiceError::Unauthorized("token verification failed".into()))?;
+
+        if !is_valid {
+            return Err(ServiceError::Unauthorized("invalid session token".into()));
+        }
 
         // validate it's not expired
         if session.expires_at < OffsetDateTime::now_utc() {
@@ -148,10 +190,13 @@ impl IAuthenticationService for AuthenticationService {
 
         user.roles = roles;
 
-        // return user and session details
-        Ok(AuthenticatedUser {
+        let mut auth_user = AuthenticatedUser {
             user: user.into(),
             session,
-        })
+        };
+
+        auth_user.session.token = session_token.encode();
+        // return user and session details
+        Ok(auth_user)
     }
 }

@@ -1,5 +1,6 @@
 mod auth;
 mod authentication;
+mod background_jobs;
 mod database;
 mod docs;
 mod errors;
@@ -8,6 +9,7 @@ mod roles;
 mod services;
 mod sessions;
 mod shared_models;
+mod token;
 mod users;
 
 use authentication::router as auth_router;
@@ -24,7 +26,7 @@ use tracing_subscriber::EnvFilter;
 use users::router as user_router;
 use utoipa_scalar::{Scalar, Servable};
 
-use crate::docs::ApiDoc;
+use crate::{background_jobs::spawn_cleanup_task, docs::ApiDoc};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -32,11 +34,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     tracing_subscriber::fmt()
         .with_env_filter(EnvFilter::from_default_env())
+        .pretty()
         .init();
 
     // Initialize DB and ServiceContainer
     let db = Database::new().await?;
     let container = ServiceContainer::new(db.pool.clone());
+    let session_repo = container.session_repo();
 
     let app = Router::new()
         .merge(Scalar::with_url("/docs", ApiDoc::merge_modules()))
@@ -48,6 +52,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             ServeDir::new("static").not_found_service(ServeFile::new("static/index.html")),
         )
         .with_state(container);
+
+    let _cleanup_handle = spawn_cleanup_task(session_repo);
 
     let addr = SocketAddr::from(([127, 0, 0, 1], 8080));
     tracing::info!("Listening on http://{}", addr);

@@ -1,6 +1,6 @@
 -- Add up migration script here
 CREATE TABLE users (
-    id TEXT PRIMARY KEY NOT NULL,
+    id BLOB PRIMARY KEY NOT NULL,
     username TEXT UNIQUE NOT NULL,
     email TEXT UNIQUE NOT NULL,
     first_name TEXT NOT NULL,

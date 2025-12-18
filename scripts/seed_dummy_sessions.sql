@@ -1,9 +1,9 @@
 -- this script is used to verify background service worker can cleanup old sessions.
 INSERT INTO sessions (id, token, user_id, expires_at)
 VALUES
-    ('a6cd7fc1-d7f0-11f0-8d6c-3c7c3f215201', 'empty', '5002ffb1-d7bd-11f0-b31f-3c7c3f215201', CURRENT_TIMESTAMP),
-    ('a49897f8-d7f0-11f0-a092-3c7c3f215201', 'empty', '5002ffb1-d7bd-11f0-b31f-3c7c3f215201', CURRENT_TIMESTAMP),
-    ('a736c374-d7f0-11f0-a692-3c7c3f215201', 'empty', '5002ffb1-d7bd-11f0-b31f-3c7c3f215201', CURRENT_TIMESTAMP),
-    ('a77bf8d8-d7f0-11f0-a6f3-3c7c3f215201', 'empty', '5002ffb1-d7bd-11f0-b31f-3c7c3f215201', CURRENT_TIMESTAMP),
-    ('edeeb4d0-d7f0-11f0-9952-3c7c3f215201', 'empty', '5002ffb1-d7bd-11f0-b31f-3c7c3f215201', CURRENT_TIMESTAMP),
-    ('eed4f2f3-d7f0-11f0-bf22-3c7c3f215201', 'empty', '5002ffb1-d7bd-11f0-b31f-3c7c3f215201', CURRENT_TIMESTAMP);
+    (X'019b33907bef7aa19f24d5a7406a8adb', 'empty', X'019b3387d4a072b08c4bbf86bae7ffe2', CURRENT_TIMESTAMP),
+    (X'019b3390850f74b1b772d7d02c6d08c7', 'empty', X'019b3387d4a072b08c4bbf86bae7ffe2', CURRENT_TIMESTAMP),
+    (X'019b339087aa7213a352f63305b83735', 'empty', X'019b3387d4a072b08c4bbf86bae7ffe2', CURRENT_TIMESTAMP),
+    (X'019b339089de74b29d071a434ebfc829', 'empty', X'019b3387d4a072b08c4bbf86bae7ffe2', CURRENT_TIMESTAMP),
+    (X'019b33908b967b5288e3387c8cf5f67c', 'empty', X'019b3387d4a072b08c4bbf86bae7ffe2', CURRENT_TIMESTAMP),
+    (X'019b33913c2a7fe189f371455e08a911', 'empty', X'019b3387d4a072b08c4bbf86bae7ffe2', CURRENT_TIMESTAMP);

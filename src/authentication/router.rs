@@ -59,7 +59,7 @@ pub fn router() -> Router<ServiceContainer> {
                   the session cookie."
 )]
 pub async fn refresh(auth: AuthenticatedUser) -> Result<impl IntoResponse, ApiError> {
-    let cookie = Cookie::build(("session_id", auth.session.id.to_string()))
+    let cookie = Cookie::build(("session_id", auth.session.token))
         .path("/")
         .http_only(true)
         .secure(true)
@@ -92,7 +92,7 @@ pub async fn login(
 ) -> Result<impl IntoResponse, ApiError> {
     let AuthenticatedUser { user, session } = container.auth_service().login(login).await?;
 
-    let cookie = Cookie::build(("session_id", session.id.to_string()))
+    let cookie = Cookie::build(("session_id", session.token))
         .path("/")
         .http_only(true)
         .secure(true)

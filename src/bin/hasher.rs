@@ -25,7 +25,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .to_string();
 
     println!("\nArgon2id Hash:");
-    println!("{}", password_hash);
+    println!("{password_hash}");
 
     Ok(())
 }

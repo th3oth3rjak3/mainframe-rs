@@ -1,7 +1,7 @@
 -- Add up migration script here
 CREATE TABLE recipes (
-    id TEXT NOT NULL PRIMARY KEY,
-    user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    id BLOB PRIMARY KEY NOT NULL,
+    user_id BLOB NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     name TEXT NOT NULL,
     author TEXT,
     description TEXT,
