@@ -1,11 +1,12 @@
 use serde::{Deserialize, Serialize};
+use utoipa::ToSchema;
 
 use crate::{
     sessions::Session,
     users::{User, UserResponse},
 };
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
 pub struct LoginRequest {
     pub username: String,
     pub password: String,

@@ -1,15 +1,16 @@
 use std::fmt::Display;
 
 use serde::{Deserialize, Serialize};
+use utoipa::ToSchema;
 use uuid::Uuid;
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
 pub struct Role {
     pub id: Uuid,
     pub name: RoleName,
 }
 
-#[derive(Debug, Clone, Copy, Eq, PartialEq, sqlx::Type, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, Eq, PartialEq, sqlx::Type, Serialize, Deserialize, ToSchema)]
 pub enum RoleName {
     Administrator,
     RecipeUser,

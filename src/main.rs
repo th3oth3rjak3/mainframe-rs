@@ -1,6 +1,7 @@
 mod auth;
 mod authentication;
 mod database;
+mod docs;
 mod errors;
 mod recipes;
 mod roles;
@@ -20,6 +21,9 @@ use tokio::net::TcpListener;
 use tower_http::services::{ServeDir, ServeFile};
 use tracing_subscriber::EnvFilter;
 use users::router as user_router;
+use utoipa_scalar::{Scalar, Servable};
+
+use crate::docs::ApiDoc;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -34,6 +38,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let container = ServiceContainer::new(db.pool.clone());
 
     let app = Router::new()
+        .merge(Scalar::with_url("/docs", ApiDoc::merge_modules()))
         .nest("/api/recipes", recipe_router())
         .nest("/api/users", user_router())
         .nest("/api/auth", auth_router())

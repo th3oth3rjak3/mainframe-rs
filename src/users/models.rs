@@ -7,6 +7,7 @@ use serde::{Deserialize, Serialize};
 use sqlx::prelude::FromRow;
 use std::fmt::Display;
 use time::OffsetDateTime;
+use utoipa::ToSchema;
 use uuid::Uuid;
 
 use crate::roles::{Role, RoleName};
@@ -103,7 +104,7 @@ impl From<UserBase> for User {
     }
 }
 
-#[derive(Debug, Clone, Deserialize, Serialize)]
+#[derive(Debug, Clone, Deserialize, Serialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct CreateUserRequest {
     pub first_name: String,
@@ -114,7 +115,7 @@ pub struct CreateUserRequest {
     pub is_admin: bool,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct UpdateUserRequest {
     pub first_name: String,
@@ -124,7 +125,7 @@ pub struct UpdateUserRequest {
     pub is_admin: bool,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct UserResponse {
     pub id: Uuid,
@@ -163,7 +164,7 @@ impl From<User> for UserResponse {
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct UserBaseResponse {
     pub id: Uuid,
