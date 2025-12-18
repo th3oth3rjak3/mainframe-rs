@@ -7,7 +7,8 @@ use crate::{
     errors::ServiceError,
     roles::IRoleRepository,
     users::{
-        CreateUserRequest, IUserRepository, UpdateUserRequest, User, UserBaseResponse, UserResponse,
+        CreateUserRequest, IUserRepository, Password, UpdatePasswordRequest, UpdateUserRequest,
+        User, UserBaseResponse, UserResponse,
     },
 };
 
@@ -17,6 +18,11 @@ pub trait IUserService: Send + Sync {
     async fn get_all(&self) -> Result<Vec<UserBaseResponse>, ServiceError>;
     async fn create(&self, request: CreateUserRequest) -> Result<Uuid, ServiceError>;
     async fn update(&self, id: Uuid, request: UpdateUserRequest) -> Result<(), ServiceError>;
+    async fn update_password_for_user(
+        &self,
+        id: Uuid,
+        request: UpdatePasswordRequest,
+    ) -> Result<(), ServiceError>;
     async fn delete(&self, id: Uuid) -> Result<(), ServiceError>;
 }
 
@@ -75,6 +81,18 @@ impl IUserService for UserService {
         existing.updated_at = OffsetDateTime::now_utc();
 
         self.user_repo.update_base(&existing).await?;
+        Ok(())
+    }
+
+    async fn update_password_for_user(
+        &self,
+        id: Uuid,
+        request: UpdatePasswordRequest,
+    ) -> Result<(), ServiceError> {
+        let mut existing = self.user_repo.get_by_id(id).await?;
+        let new_password = Password::new(&request.raw_password)?;
+        existing.password_hash = new_password;
+        self.user_repo.update_password(&existing).await?;
         Ok(())
     }
 
