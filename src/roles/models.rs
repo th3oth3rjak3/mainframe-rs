@@ -12,7 +12,6 @@ pub struct Role {
 #[derive(Debug, Clone, Copy, Eq, PartialEq, sqlx::Type, Serialize, Deserialize)]
 pub enum RoleName {
     Administrator,
-    BasicUser,
     RecipeUser,
     Unknown,
 }
@@ -21,7 +20,6 @@ impl Display for RoleName {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let name = match self {
             Self::Administrator => "Administrator",
-            Self::BasicUser => "Basic User",
             Self::RecipeUser => "Recipe User",
             Self::Unknown => "Unknown",
         };
@@ -34,7 +32,6 @@ impl From<String> for RoleName {
     fn from(value: String) -> Self {
         match value.as_str() {
             "Administrator" => Self::Administrator,
-            "Basic User" => Self::BasicUser,
             "Recipe User" => Self::RecipeUser,
             _ => Self::Unknown,
         }

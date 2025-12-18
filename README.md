@@ -1,5 +1,0 @@
-- Add Recipe User extractor
-- Remove basic user role
-- Write a proper readme.
-- Swap old frontend for new frontend (keeping nice tiles for dashboard)
-- Change auth session id for split token approach.
