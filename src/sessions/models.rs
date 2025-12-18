@@ -9,18 +9,20 @@ use crate::users::UserBaseResponse;
 pub struct Session {
     pub id: Uuid,
     pub user_id: Uuid,
+    pub token: String,
     pub expires_at: OffsetDateTime,
 }
 
 impl Session {
-    pub fn new(user_id: Uuid) -> Self {
-        Self::new_with_duration(user_id, Duration::hours(2))
+    pub fn new(id: Uuid, user_id: Uuid, token: String) -> Self {
+        Self::new_with_duration(id, user_id, Duration::hours(2), token)
     }
 
-    pub fn new_with_duration(user_id: Uuid, duration: Duration) -> Self {
+    pub fn new_with_duration(id: Uuid, user_id: Uuid, duration: Duration, token: String) -> Self {
         Self {
-            id: Uuid::now_v7(),
+            id,
             user_id,
+            token,
             expires_at: OffsetDateTime::now_utc().saturating_add(duration),
         }
     }

@@ -1,14 +1,12 @@
-use axum::{
-    RequestPartsExt,
-    extract::{FromRef, FromRequestParts},
-};
-use axum_extra::extract::CookieJar;
-use uuid::Uuid;
-
 use crate::{
     authentication::AuthenticatedUser, errors::ApiError, services::ServiceContainer,
     sessions::Session, users::UserResponse,
 };
+use axum::{
+    RequestPartsExt,
+    extract::{FromRef, FromRequestParts},
+};
+use axum_extra::extract::{CookieJar, cookie::Cookie};
 
 impl<S> FromRequestParts<S> for AuthenticatedUser
 where
@@ -30,14 +28,19 @@ where
                     reason: "could not extract cookie from the cookie jar".into(),
                 })?;
 
-        let session_id = cookie_jar
-            .get("session_id")
-            .and_then(|cookie| Uuid::parse_str(cookie.value()).ok())
-            .ok_or(ApiError::Unauthorized {
-                reason: "could not parse session id from cookie".into(),
-            })?;
+        let cookie_value =
+            cookie_jar
+                .get("session_id")
+                .map(Cookie::value)
+                .ok_or(ApiError::Unauthorized {
+                    reason: "session cookie not found".into(),
+                })?;
 
-        let auth_user = container.auth_service().refresh(session_id).await?;
+        // Parse the token (uuid:token format)
+        let token = crate::token::SessionToken::parse(cookie_value)?;
+
+        // Verify with your auth service (which should check the hashed token)
+        let auth_user = container.auth_service().refresh(token).await?;
 
         Ok(auth_user)
     }

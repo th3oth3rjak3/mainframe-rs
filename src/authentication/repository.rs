@@ -53,15 +53,26 @@ impl IAuthenticationRepository for SqlxAuthenticationRepository {
         .execute(&mut *tx)
         .await?;
 
-        sqlx::query!(
-            r#"INSERT INTO sessions (id, user_id, expires_at)
-            VALUES (?, ?, ?)"#,
+        tracing::debug!("Attempting to insert session: {:?}", session);
+        tracing::debug!(
+            "Session ID: {}, Token length: {}, User ID: {}",
             session.id,
+            session.token.len(),
+            session.user_id
+        );
+
+        sqlx::query!(
+            r#"INSERT INTO sessions (id, token, user_id, expires_at)
+    VALUES (?, ?, ?, ?)"#,
+            session.id,
+            session.token,
             session.user_id,
             session.expires_at
         )
         .execute(&mut *tx)
         .await?;
+
+        tracing::debug!("Session inserted successfully");
 
         tx.commit().await?;
 
