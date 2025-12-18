@@ -6,6 +6,7 @@ CREATE TABLE users (
     first_name TEXT NOT NULL,
     last_name TEXT NOT NULL,
     password_hash TEXT NOT NULL,
+    password_expiration DATETIME,
     last_login DATETIME,
     failed_login_attempts INTEGER NOT NULL DEFAULT 0,
     last_failed_login_attempt DATETIME,

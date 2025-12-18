@@ -39,6 +39,7 @@ impl IUserRepository for SqlxUserRepository {
                 last_name, 
                 username, 
                 password_hash,
+                password_expiration,
                 last_login,
                 failed_login_attempts,
                 last_failed_login_attempt,
@@ -70,6 +71,7 @@ impl IUserRepository for SqlxUserRepository {
                 last_name, 
                 username, 
                 password_hash,
+                password_expiration,
                 last_login,
                 is_disabled,
                 failed_login_attempts,
@@ -101,6 +103,7 @@ impl IUserRepository for SqlxUserRepository {
                 last_name, 
                 username, 
                 password_hash,
+                password_expiration,
                 last_login,
                 is_disabled,
                 failed_login_attempts,
@@ -117,15 +120,16 @@ impl IUserRepository for SqlxUserRepository {
 
     async fn create(&self, user: &User) -> Result<(), RepositoryError> {
         sqlx::query!(
-            r#"INSERT INTO users (id, email, first_name, last_name, username, password_hash)
-            VALUES (?, ?, ?, ?, ?, ?)
+            r#"INSERT INTO users (id, email, first_name, last_name, username, password_hash, password_expiration)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
             "#,
             user.id,
             user.email,
             user.first_name,
             user.last_name,
             user.username,
-            user.password_hash
+            user.password_hash,
+            user.password_expiration,
         )
         .fetch_one(&self.pool)
         .await?;
