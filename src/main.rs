@@ -16,6 +16,7 @@ use database::Database;
 use dotenvy::dotenv;
 use recipes::router as recipe_router;
 use services::ServiceContainer;
+use sessions::router as session_router;
 use std::net::SocketAddr;
 use tokio::net::TcpListener;
 use tower_http::services::{ServeDir, ServeFile};
@@ -42,6 +43,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .nest("/api/recipes", recipe_router())
         .nest("/api/users", user_router())
         .nest("/api/auth", auth_router())
+        .nest("/api/sessions", session_router())
         .fallback_service(
             ServeDir::new("static").not_found_service(ServeFile::new("static/index.html")),
         )

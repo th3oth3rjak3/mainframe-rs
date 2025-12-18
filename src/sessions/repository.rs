@@ -2,7 +2,11 @@ use async_trait::async_trait;
 use sqlx::SqlitePool;
 use uuid::Uuid;
 
-use crate::{errors::RepositoryError, sessions::Session};
+use crate::{
+    errors::RepositoryError,
+    sessions::{Session, SessionSummary},
+    users::{UserBase, UserBaseResponse},
+};
 
 #[async_trait]
 pub trait ISessionRepository: Send + Sync {
@@ -23,6 +27,10 @@ pub trait ISessionRepository: Send + Sync {
 
     /// Get a session and the associated user for auth.
     async fn get_by_id(&self, session_id: Uuid) -> Result<Session, RepositoryError>;
+
+    /// Find all active sessions and get the details for each user and a count of active
+    /// sessions.
+    async fn get_active_summary(&self) -> Result<Vec<SessionSummary>, RepositoryError>;
 }
 
 pub struct SqlxSessionRepository {
@@ -112,5 +120,51 @@ impl ISessionRepository for SqlxSessionRepository {
         })?;
 
         Ok(session)
+    }
+
+    async fn get_active_summary(&self) -> Result<Vec<SessionSummary>, RepositoryError> {
+        let rows = sqlx::query!(
+            r#"
+            SELECT DISTINCT
+                COUNT(1) as count,
+                u.id as "id: uuid::Uuid",
+                u.first_name,
+                u.last_name,
+                u.email,
+                u.username,
+                u.last_login,
+                u.is_disabled
+            FROM users u
+            INNER JOIN sessions s
+                ON s.user_id = u.id
+            WHERE s.expires_at > CURRENT_TIMESTAMP
+            GROUP BY u.id
+        "#
+        )
+        .fetch_all(&self.pool)
+        .await?;
+
+        let results: Vec<SessionSummary> = rows
+            .into_iter()
+            .map(|row| {
+                let count = row.count;
+                let user_base = UserBaseResponse {
+                    id: row.id,
+                    first_name: row.first_name,
+                    last_name: row.last_name,
+                    email: row.email,
+                    username: row.username,
+                    last_login: row.last_login,
+                    is_disabled: row.is_disabled,
+                };
+
+                SessionSummary {
+                    user: user_base,
+                    active_sessions: count,
+                }
+            })
+            .collect();
+
+        Ok(results)
     }
 }
