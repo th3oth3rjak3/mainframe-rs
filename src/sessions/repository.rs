@@ -5,7 +5,7 @@ use uuid::Uuid;
 use crate::{
     errors::RepositoryError,
     sessions::{Session, SessionSummary},
-    users::{UserBase, UserBaseResponse},
+    users::UserBaseResponse,
 };
 
 #[async_trait]

@@ -8,6 +8,8 @@ pub fn router() -> Router<ServiceContainer> {
     Router::new().route("/", get(session_summary))
 }
 
+// Clippy lint triggered by utoipa macro expansion, not our code
+#[allow(clippy::needless_for_each)]
 #[derive(utoipa::OpenApi)]
 #[openapi(
     paths(

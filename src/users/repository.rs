@@ -13,6 +13,7 @@ pub trait IUserRepository: Send + Sync {
     async fn get_all(&self) -> Result<Vec<UserBase>, RepositoryError>;
     async fn create(&self, user: &User) -> Result<(), RepositoryError>;
     async fn update_base(&self, user: &UserBase) -> Result<(), RepositoryError>;
+    async fn update_password(&self, user: &UserBase) -> Result<(), RepositoryError>;
     async fn delete(&self, id: Uuid) -> Result<(), RepositoryError>;
 }
 
@@ -166,6 +167,17 @@ impl IUserRepository for SqlxUserRepository {
             });
         }
 
+        Ok(())
+    }
+
+    async fn update_password(&self, user: &UserBase) -> Result<(), RepositoryError> {
+        sqlx::query!(
+            "UPDATE users SET password_hash = ? WHERE id = ?",
+            user.password_hash,
+            user.id
+        )
+        .execute(&self.pool)
+        .await?;
         Ok(())
     }
 

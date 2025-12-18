@@ -3,42 +3,101 @@ name = "mainframe"
 version = "0.1.0"
 edition = "2024"
 
+
 [dependencies]
 anyhow = "1.0.100"
-argon2 = { version = "0.5.3", features = ["std"] }
 async-trait = "0.1.89"
-axum = { version = "0.8.6", features = ["macros"] }
-axum-extra = { version = "0.12.2", features = ["cookie"] }
 dotenvy = "0.15.7"
 hyper = "1.8.1"
-serde = { version = "1.0.228", features = ["derive"] }
 serde_json = "1.0.145"
-sqlx = { version = "0.8.6", features = [
-    "runtime-tokio-rustls",
-    "sqlite",
-    "macros",
-    "time",
-    "uuid",
-    "derive",
-] }
-strum = { version = "0.27.2", features = ["derive"] }
 strum_macros = "0.27.2"
 thiserror = "2.0.17"
-time = { version = "0.3.44", features = ["serde"] }
-tokio = { version = "1.48.0", features = ["full"] }
-tower-http = { version = "0.6.8", features = ["full"] }
 tracing = "0.1.43"
-tracing-subscriber = { version = "0.3.22", features = ["fmt", "env-filter"] }
-utoipa = { version = "5.4.0", features = ["axum_extras", "chrono", "debug", "time", "uuid"] }
-utoipa-scalar = { version = "0.3.0", features = ["axum"] }
-uuid = { version = "1.19.0", features = ["serde", "v7"] }
+
+
+[dependencies.argon2]
+version = "0.5.3"
+features = [ "std" ]
+
+
+[dependencies.axum]
+version = "0.8.6"
+features = [ "macros" ]
+
+
+[dependencies.axum-extra]
+version = "0.12.2"
+features = [ "cookie" ]
+
+
+[dependencies.serde]
+version = "1.0.228"
+features = [ "derive" ]
+
+
+[dependencies.sqlx]
+version = "0.8.6"
+features = [
+"runtime-tokio-rustls",
+"sqlite",
+"macros",
+"time",
+"uuid",
+"derive"
+]
+
+
+[dependencies.strum]
+version = "0.27.2"
+features = [ "derive" ]
+
+
+[dependencies.time]
+version = "0.3.44"
+features = [ "serde" ]
+
+
+[dependencies.tokio]
+version = "1.48.0"
+features = [ "full" ]
+
+
+[dependencies.tower-http]
+version = "0.6.8"
+features = [ "full" ]
+
+
+[dependencies.tracing-subscriber]
+version = "0.3.22"
+features = [ "fmt", "env-filter" ]
+
+
+[dependencies.utoipa]
+version = "5.4.0"
+features = [ "axum_extras", "chrono", "debug", "time", "uuid" ]
+
+
+[dependencies.utoipa-scalar]
+version = "0.3.0"
+features = [ "axum" ]
+
+
+[dependencies.uuid]
+version = "1.19.0"
+features = [ "serde", "v7" ]
 
 
 [lints.clippy]
-# Lint groups
-nursery = { level = "deny", priority = -1 }
-pedantic = { level = "deny", priority = -1 }
-
-# Explicit correctness / safety lints
 unwrap_used = "deny"
 expect_used = "deny"
+needless_for_each = "warn"
+
+
+[lints.clippy.nursery]
+level = "deny"
+priority = -1
+
+
+[lints.clippy.pedantic]
+level = "deny"
+priority = -1
