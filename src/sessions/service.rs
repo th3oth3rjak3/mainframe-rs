@@ -5,11 +5,14 @@ use uuid::Uuid;
 
 use crate::{
     errors::ServiceError,
-    sessions::{ISessionRepository, Session},
+    sessions::{ISessionRepository, Session, SessionSummary},
 };
 
 #[async_trait]
 pub trait ISessionService: Send + Sync {
+    /// Get a list of session details for all active sessions.
+    async fn get_session_summaries(&self) -> Result<Vec<SessionSummary>, ServiceError>;
+
     /// Create a new session for a given user.
     async fn create_session(&self, user_id: Uuid) -> Result<Session, ServiceError>;
 
@@ -32,6 +35,11 @@ impl SessionService {
 
 #[async_trait]
 impl ISessionService for SessionService {
+    async fn get_session_summaries(&self) -> Result<Vec<SessionSummary>, ServiceError> {
+        let details = self.session_repo.get_active_summary().await?;
+        Ok(details)
+    }
+
     async fn create_session(&self, user_id: Uuid) -> Result<Session, ServiceError> {
         let session = Session::new(user_id);
         self.session_repo.create(&session).await?;

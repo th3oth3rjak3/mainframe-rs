@@ -6,3 +6,6 @@ pub use repository::*;
 
 pub mod service;
 pub use service::*;
+
+pub mod router;
+pub use router::*;

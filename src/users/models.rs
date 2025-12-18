@@ -174,6 +174,7 @@ pub struct UserBaseResponse {
     pub username: String,
     #[serde(with = "time::serde::rfc3339::option")]
     pub last_login: Option<OffsetDateTime>,
+    pub is_disabled: bool,
 }
 
 impl From<UserBase> for UserBaseResponse {
@@ -185,6 +186,7 @@ impl From<UserBase> for UserBaseResponse {
             email: user.email,
             username: user.username,
             last_login: user.last_login,
+            is_disabled: user.is_disabled,
         }
     }
 }
