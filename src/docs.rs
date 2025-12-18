@@ -1,7 +1,7 @@
-//! OpenAPI documentation configuration and aggregation.
+//! `OpenAPI` documentation configuration and aggregation.
 //!
 //! This module defines the main [`ApiDoc`] struct that serves as the root of the
-//! OpenAPI specification for the Mainframe API. It merges documentation from all
+//! `OpenAPI` specification for the Mainframe API. It merges documentation from all
 //! feature-specific modules (users, authentication, recipes, etc.) into a single
 //! unified API specification.
 //!
@@ -31,7 +31,7 @@
 //!
 //! # Usage
 //!
-//! The [`ApiDoc::merge_modules()`] method is called when serving the OpenAPI specification
+//! The [`ApiDoc::merge_modules()`] method is called when serving the `OpenAPI` specification
 //! to Scalar or other documentation tools. It automatically combines all module-level
 //! documentation into a single spec.
 
@@ -39,13 +39,15 @@ use crate::{authentication::AuthApiDoc, sessions::SessionApiDoc, users::UsersApi
 use std::env;
 use utoipa::OpenApi;
 
+// Clippy lint triggered by utoipa macro expansion, not our code
+#[allow(clippy::needless_for_each)]
 #[derive(OpenApi)]
 #[openapi(paths(), components(), tags())]
 pub struct ApiDoc;
 
 impl ApiDoc {
     pub fn merge_modules() -> utoipa::openapi::OpenApi {
-        let mut api_docs = ApiDoc::openapi();
+        let mut api_docs = Self::openapi();
 
         // Update info from environment variables
         api_docs.info.title = env::var("API_TITLE").unwrap_or_else(|_| "Mainframe API".to_string());

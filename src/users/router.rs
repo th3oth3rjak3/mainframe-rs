@@ -14,16 +14,22 @@ use crate::{
     authentication::AuthenticatedUser,
     errors::ApiError,
     services::ServiceContainer,
-    users::{CreateUserRequest, UpdateUserRequest, UserBaseResponse, UserResponse},
+    users::{
+        CreateUserRequest, UpdatePasswordRequest, UpdateUserRequest, UserBaseResponse, UserResponse,
+    },
 };
 
 pub fn router() -> Router<ServiceContainer> {
     Router::new()
         .route("/", get(get_all_users).post(create_user))
         .route("/{id}", get(get_by_id).put(update_user).delete(delete_user))
+        .route("/{id}/password", put(update_password_for_user))
         .route("/self", put(update_self))
+        .route("/self/password", put(update_own_password))
 }
 
+// Clippy lint triggered by utoipa macro expansion, not our code
+#[allow(clippy::needless_for_each)]
 #[derive(utoipa::OpenApi)]
 #[openapi(
     paths(
@@ -31,6 +37,8 @@ pub fn router() -> Router<ServiceContainer> {
         crate::users::get_by_id,
         crate::users::create_user,
         crate::users::update_user,
+        crate::users::update_own_password,
+        crate::users::update_password_for_user,
         crate::users::update_self,
         crate::users::delete_user
     ),
@@ -109,6 +117,7 @@ pub async fn get_by_id(
         Returns a 201 status code with a Location header pointing to the newly created user resource. \
         Requires a valid session_id cookie and administrator role to access this endpoint."
 )]
+
 pub async fn create_user(
     _: AdminUser,
     State(container): State<ServiceContainer>,
@@ -155,6 +164,37 @@ pub async fn update_user(
 
 #[utoipa::path(
     put,
+    summary = "Update Password For User",
+    path = "/api/users/{id}/password",
+    tag = "Users",
+    params(
+        ("id" = Uuid, Path, description = "Unique identifier of the user")
+    ),
+    request_body = UpdatePasswordRequest,
+    responses(
+        (status = 204, description = "Password updated successfully for other user"),
+        (status = 400, description = "Invalid request body"),
+        (status = 401, description = "Unauthorized"),
+    ),
+    description = "Allows an administrator to update a password for another user. \
+        Only the password field provided in the request body will be updated. \
+        Returns a 204 No Content status on success. Requires a valid session_id cookie."
+)]
+pub async fn update_password_for_user(
+    _: AdminUser,
+    Path(id): Path<Uuid>,
+    State(container): State<ServiceContainer>,
+    Json(req): Json<UpdatePasswordRequest>,
+) -> Result<impl IntoResponse, ApiError> {
+    container
+        .user_service()
+        .update_password_for_user(id, req)
+        .await?;
+    Ok(StatusCode::NO_CONTENT)
+}
+
+#[utoipa::path(
+    put,
     summary = "Update Current User",
     path = "/api/users/self",
     tag = "Users",
@@ -175,6 +215,34 @@ pub async fn update_self(
     Json(req): Json<UpdateUserRequest>,
 ) -> Result<impl IntoResponse, ApiError> {
     container.user_service().update(auth.user.id, req).await?;
+    Ok(StatusCode::NO_CONTENT)
+}
+
+#[utoipa::path(
+    put,
+    summary = "Update Current User's Password",
+    path = "/api/users/self/password",
+    tag = "Users",
+    request_body = UpdatePasswordRequest,
+    responses(
+        (status = 204, description = "Current User's Password updated successfully"),
+        (status = 400, description = "Invalid request body"),
+        (status = 401, description = "Unauthorized"),
+    ),
+    description = "Allows an authenticated user to update their own password. \
+        The user ID is automatically determined from the authentication session. \
+        Only the password field provided in the request body will be updated. \
+        Returns a 204 No Content status on success. Requires a valid session_id cookie."
+)]
+pub async fn update_own_password(
+    auth: AuthenticatedUser,
+    State(container): State<ServiceContainer>,
+    Json(req): Json<UpdatePasswordRequest>,
+) -> Result<impl IntoResponse, ApiError> {
+    container
+        .user_service()
+        .update_password_for_user(auth.user.id, req)
+        .await?;
     Ok(StatusCode::NO_CONTENT)
 }
 

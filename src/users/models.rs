@@ -218,6 +218,12 @@ impl TryFrom<CreateUserRequest> for User {
     }
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
+#[serde(rename_all = "camelCase")]
+pub struct UpdatePasswordRequest {
+    pub raw_password: String,
+}
+
 #[cfg(test)]
 mod tests {
     use argon2::{

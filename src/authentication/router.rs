@@ -16,6 +16,8 @@ use axum_extra::extract::{
 };
 use time::{Duration, OffsetDateTime};
 
+// Clippy lint triggered by utoipa macro expansion, not our code
+#[allow(clippy::needless_for_each)]
 #[derive(utoipa::OpenApi)]
 #[openapi(
     paths(
