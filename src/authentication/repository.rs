@@ -1,10 +1,20 @@
 use sqlx::SqlitePool;
 
-use crate::{authentication::LoginDetails, errors::RepositoryError, roles::Role, sessions::Session, users::{User, UserBase}};
+use crate::{
+    authentication::LoginDetails,
+    errors::RepositoryError,
+    roles::Role,
+    sessions::Session,
+    users::{User, UserBase},
+};
 
 #[async_trait::async_trait]
 pub trait IAuthenticationRepository: Send + Sync {
-    async fn login(&self, user_base: UserBase, session: Session) -> Result<LoginDetails, RepositoryError>;
+    async fn login(
+        &self,
+        user_base: UserBase,
+        session: Session,
+    ) -> Result<LoginDetails, RepositoryError>;
 }
 
 pub struct SqlxAuthenticationRepository {
@@ -19,10 +29,15 @@ impl SqlxAuthenticationRepository {
 
 #[async_trait::async_trait]
 impl IAuthenticationRepository for SqlxAuthenticationRepository {
-    async fn login(&self, user_base: UserBase, session: Session) -> Result<LoginDetails, RepositoryError> {
+    async fn login(
+        &self,
+        user_base: UserBase,
+        session: Session,
+    ) -> Result<LoginDetails, RepositoryError> {
         let mut tx = self.pool.begin().await?;
-        
-        sqlx::query!(r#"
+
+        sqlx::query!(
+            r#"
             UPDATE users 
             SET last_login = ?, 
             failed_login_attempts = ?, 
@@ -67,9 +82,9 @@ impl IAuthenticationRepository for SqlxAuthenticationRepository {
         )
         .fetch_all(&self.pool)
         .await?;
-    
+
         user.roles = roles;
-        
+
         Ok(LoginDetails { session, user })
     }
 }

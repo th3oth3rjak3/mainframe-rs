@@ -23,25 +23,18 @@ pub fn router() -> Router<ServiceContainer> {
         .route("/logout", post(logout))
 }
 
-pub async fn refresh(
-    auth: AuthenticatedUser,
-    State(container): State<ServiceContainer>,
-) -> Result<impl IntoResponse, ApiError> {
-    let AuthenticatedUser { user, session } =
-        container.auth_service().refresh(auth.session.id).await?;
-
-    // TODO: change the id to a split cookie token.
-    let cookie = Cookie::build(("session_id", session.id.to_string()))
+pub async fn refresh(auth: AuthenticatedUser) -> Result<impl IntoResponse, ApiError> {
+    let cookie = Cookie::build(("session_id", auth.session.id.to_string()))
         .path("/")
         .http_only(true)
         .secure(true)
         .same_site(cookie::SameSite::Strict)
-        .expires(session.expires_at)
+        .expires(auth.session.expires_at)
         .build();
 
     let jar = CookieJar::new().add(cookie);
 
-    Ok((jar, Json(user)))
+    Ok((jar, Json(auth.user)))
 }
 
 pub async fn login(
