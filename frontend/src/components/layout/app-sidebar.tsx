@@ -1,4 +1,4 @@
-import { Book, Calendar, ChevronUp, Home, Inbox, Search, Settings, User2 } from "lucide-react";
+import { Book, ChevronUp, Home, User2 } from "lucide-react";
 
 import {
   Sidebar,
@@ -21,7 +21,7 @@ import {
 import { ModeToggle } from "./mode-toggle";
 import { useAuthStore } from "@/features/auth/authStore";
 import { toast } from "sonner";
-import { ROLES } from "@/features/auth/types";
+import { AuthenticatedUser, ROLES } from "@/features/auth/types";
 
 // Menu items.
 const items = [
@@ -29,37 +29,14 @@ const items = [
     title: "Home",
     url: "#",
     icon: Home,
-    role: null,
-  },
-  {
-    title: "Inbox",
-    url: "#",
-    icon: Inbox,
-    role: null,
-  },
-  {
-    title: "Calendar",
-    url: "#",
-    icon: Calendar,
-    role: null,
+    canAccess: (_: AuthenticatedUser | null) => true,
   },
   {
     title: "Recipes",
     url: "#",
     icon: Book,
-    role: ROLES.RecipeUser,
-  },
-  {
-    title: "Search",
-    url: "#",
-    icon: Search,
-    role: null,
-  },
-  {
-    title: "Settings",
-    url: "#",
-    icon: Settings,
-    role: null,
+    canAccess: (user: AuthenticatedUser | null) =>
+      user !== null && (user.hasRole(ROLES.RecipeUser) || user.isAdmin),
   },
 ];
 
@@ -69,17 +46,17 @@ type AppSidebarProps = {
 
 export default function AppSidebar({ variant }: AppSidebarProps) {
   const logout = useAuthStore((state) => state.logout);
-  const hasRole = useAuthStore((state) => state.hasRole);
+  const user = useAuthStore((state) => state.user);
 
-  const handleSignOut = async () => {
+  const handleLogout = async () => {
     try {
       await logout();
-      toast.success("Signed out successfully");
+      toast.success("Logout Successful");
     } catch (error) {
       if (error instanceof Error) {
-        toast.error(`Failed to sign out: ${error.message}`);
+        toast.error(`Failed to logout: ${error.message}`);
       } else {
-        toast.error("Failed to sign out");
+        toast.error("Failed to logout");
       }
     }
   };
@@ -93,7 +70,7 @@ export default function AppSidebar({ variant }: AppSidebarProps) {
           <SidebarGroupContent>
             <SidebarMenu>
               {items.map((item) =>
-                item.role === null || hasRole(item.role) ? (
+                item.canAccess(user) ? (
                   <SidebarMenuItem key={item.title}>
                     <SidebarMenuButton asChild>
                       <a href={item.url}>
@@ -115,19 +92,13 @@ export default function AppSidebar({ variant }: AppSidebarProps) {
               <DropdownMenuTrigger asChild>
                 <SidebarMenuButton className="justify-center relative">
                   <User2 className="absolute left-2" />
-                  <span>Username</span>
+                  <span>{user ? user.fullName : "Guest"}</span>
                   <ChevronUp className="absolute right-2 h-4 w-4" />
                 </SidebarMenuButton>
               </DropdownMenuTrigger>
               <DropdownMenuContent side="top" className="w-[var(--radix-popper-anchor-width)]">
-                <DropdownMenuItem>
-                  <span>Account</span>
-                </DropdownMenuItem>
-                <DropdownMenuItem>
-                  <span>Billing</span>
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={handleSignOut}>
-                  <span>Sign out</span>
+                <DropdownMenuItem onClick={handleLogout}>
+                  <span>Logout</span>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>

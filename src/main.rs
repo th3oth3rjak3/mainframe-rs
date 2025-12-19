@@ -63,7 +63,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let _cleanup_handle = spawn_cleanup_task(session_repo);
 
-    let addr = SocketAddr::from(([127, 0, 0, 1], 8080));
+    let addr = SocketAddr::from(([127, 0, 0, 1], 3030));
     tracing::info!("Listening on http://{}", addr);
 
     let listener = TcpListener::bind(addr).await?;

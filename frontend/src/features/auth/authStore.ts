@@ -47,7 +47,7 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
       const user = new AuthenticatedUser(response);
       set({ user, error: null, isLoggedIn: true });
     } catch (error) {
-      const message = error instanceof ApiError ? error.message : "Sign in failed";
+      const message = error instanceof ApiError ? error.message : "Login failed";
       set({ error: message, user: null });
       throw error;
     }
@@ -58,7 +58,7 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
       await service.signOut();
       set({ user: null, error: null, isLoggedIn: false });
     } catch (error) {
-      const message = error instanceof ApiError ? error.message : "Sign out failed";
+      const message = error instanceof ApiError ? error.message : "Logout failed";
       set({ error: message });
       throw error;
     }

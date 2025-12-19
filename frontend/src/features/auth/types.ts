@@ -128,7 +128,11 @@ export class AuthenticatedUser {
     return this.roles.map(r => r.name).includes(name);
   }
 
-  isAdmin(): boolean {
+  get isAdmin(): boolean {
     return this.hasRole(ROLES.Administrator);
+  }
+
+  get fullName(): string {
+    return `${this.firstName} ${this.lastName}`;
   }
 }
