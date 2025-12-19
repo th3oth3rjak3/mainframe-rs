@@ -1,0 +1,62 @@
+{
+  "db_name": "SQLite",
+  "query": "\n            SELECT DISTINCT\n                COUNT(1) as count,\n                u.id as \"id: uuid::Uuid\",\n                u.first_name,\n                u.last_name,\n                u.email,\n                u.username,\n                u.last_login,\n                u.is_disabled\n            FROM users u\n            INNER JOIN sessions s\n                ON s.user_id = u.id\n            WHERE s.expires_at > CURRENT_TIMESTAMP\n            GROUP BY u.id\n        ",
+  "describe": {
+    "columns": [
+      {
+        "name": "count",
+        "ordinal": 0,
+        "type_info": "Integer"
+      },
+      {
+        "name": "id: uuid::Uuid",
+        "ordinal": 1,
+        "type_info": "Blob"
+      },
+      {
+        "name": "first_name",
+        "ordinal": 2,
+        "type_info": "Text"
+      },
+      {
+        "name": "last_name",
+        "ordinal": 3,
+        "type_info": "Text"
+      },
+      {
+        "name": "email",
+        "ordinal": 4,
+        "type_info": "Text"
+      },
+      {
+        "name": "username",
+        "ordinal": 5,
+        "type_info": "Text"
+      },
+      {
+        "name": "last_login",
+        "ordinal": 6,
+        "type_info": "Datetime"
+      },
+      {
+        "name": "is_disabled",
+        "ordinal": 7,
+        "type_info": "Bool"
+      }
+    ],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      true,
+      false
+    ]
+  },
+  "hash": "e4fb7b75991a1ec3d05139c419ede5c762298e5688a2e5b40482629b23e4aa97"
+}
