@@ -116,7 +116,6 @@ pub struct CreateUserRequest {
     pub username: String,
     pub raw_password: String,
     pub password_expiration: OffsetDateTime,
-    pub is_admin: bool,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
@@ -126,7 +125,6 @@ pub struct UpdateUserRequest {
     pub last_name: String,
     pub email: String,
     pub username: String,
-    pub is_admin: bool,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
