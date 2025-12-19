@@ -12,7 +12,10 @@ path = "src/main.rs"
 
 [dependencies]
 anyhow = "1.0.100"
+argon2 = { version = "0.5.3", features = ["std"] }
 async-trait = "0.1.89"
+axum = { version = "0.8.6", features = ["macros"] }
+axum-extra = { version = "0.12.2", features = ["cookie"] }
 dotenvy = "0.15.7"
 hex = "0.4.3"
 hmac = "0.12.1"
@@ -22,73 +25,28 @@ sha2 = "0.10.9"
 strum_macros = "0.27.2"
 thiserror = "2.0.17"
 tracing = "0.1.43"
-
-
-[dependencies.argon2]
-version = "0.5.3"
-features = [ "std" ]
-
-
-[dependencies.axum]
-version = "0.8.6"
-features = [ "macros" ]
-
-
-[dependencies.axum-extra]
-version = "0.12.2"
-features = [ "cookie" ]
-
-
-[dependencies.serde]
-version = "1.0.228"
-features = [ "derive" ]
-
-
-[dependencies.sqlx]
-version = "0.8.6"
-features = [
-"runtime-tokio-rustls",
-"sqlite",
-"macros",
-"time",
-"uuid",
-"derive"
-]
-
-
-[dependencies.time]
-version = "0.3.44"
-features = [ "serde" ]
-
-
-[dependencies.tokio]
-version = "1.48.0"
-features = [ "full" ]
-
-
-[dependencies.tower-http]
-version = "0.6.8"
-features = [ "full" ]
-
-
-[dependencies.tracing-subscriber]
-version = "0.3.22"
-features = [ "fmt", "env-filter" ]
-
-
-[dependencies.utoipa]
-version = "5.4.0"
-features = [ "axum_extras", "chrono", "debug", "time", "uuid" ]
-
-
-[dependencies.utoipa-scalar]
-version = "0.3.0"
-features = [ "axum" ]
-
-
-[dependencies.uuid]
-version = "1.19.0"
-features = [ "serde", "v7" ]
+serde = { version = "1.0.228", features = ["derive"] }
+sqlx = { version = "0.8.6", features = [
+    "runtime-tokio-rustls",
+    "sqlite",
+    "macros",
+    "time",
+    "uuid",
+    "derive",
+] }
+time = { version = "0.3.44", features = ["serde"] }
+tokio = { version = "1.48.0", features = ["full"] }
+tower-http = { version = "0.6.8", features = ["full"] }
+tracing-subscriber = { version = "0.3.22", features = ["fmt", "env-filter"] }
+utoipa = { version = "5.4.0", features = [
+    "axum_extras",
+    "chrono",
+    "debug",
+    "time",
+    "uuid",
+] }
+utoipa-scalar = { version = "0.3.0", features = ["axum"] }
+uuid = { version = "1.19.0", features = ["serde", "v7"] }
 
 
 [lints.clippy]
@@ -107,5 +65,6 @@ priority = -1
 
 
 [patch.crates-io.utoipa]
+# https://github.com/juhaku/utoipa/pull/1423
 git = "https://github.com/raimannma/utoipa.git"
 rev = "47aa9ff215db156b6cfe687cab858360c6fe4275"
