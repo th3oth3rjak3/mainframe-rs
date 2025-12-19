@@ -11,6 +11,7 @@ pub struct Role {
 }
 
 #[derive(Debug, Clone, Copy, Eq, PartialEq, sqlx::Type, Serialize, Deserialize, ToSchema)]
+#[serde(from = "String", into = "String")]
 pub enum RoleName {
     Administrator,
     RecipeUser,
@@ -36,5 +37,11 @@ impl From<String> for RoleName {
             "Recipe User" => Self::RecipeUser,
             _ => Self::Unknown,
         }
+    }
+}
+
+impl From<RoleName> for String {
+    fn from(value: RoleName) -> Self {
+        value.to_string()
     }
 }

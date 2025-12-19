@@ -1012,7 +1012,6 @@ dependencies = [
  "serde_json",
  "sha2",
  "sqlx",
- "strum",
  "strum_macros",
  "thiserror",
  "time",
@@ -1841,15 +1840,6 @@ dependencies = [
  "unicode-bidi",
  "unicode-normalization",
  "unicode-properties",
-]
-
-[[package]]
-name = "strum"
-version = "0.27.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "af23d6f6c1a224baef9d3f61e287d2761385a5b88fdab4eb4c6f11aeb54c4bcf"
-dependencies = [
- "strum_macros",
 ]
 
 [[package]]

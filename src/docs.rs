@@ -35,7 +35,9 @@
 //! to Scalar or other documentation tools. It automatically combines all module-level
 //! documentation into a single spec.
 
-use crate::{authentication::AuthApiDoc, sessions::SessionApiDoc, users::UsersApiDoc};
+use crate::{
+    authentication::AuthApiDoc, roles::RolesApiDoc, sessions::SessionApiDoc, users::UsersApiDoc,
+};
 use std::env;
 use utoipa::OpenApi;
 
@@ -78,6 +80,7 @@ impl ApiDoc {
         api_docs.merge(UsersApiDoc::openapi());
         api_docs.merge(AuthApiDoc::openapi());
         api_docs.merge(SessionApiDoc::openapi());
+        api_docs.merge(RolesApiDoc::openapi());
 
         api_docs
     }

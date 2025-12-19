@@ -12,7 +12,7 @@ pub trait IRoleService: Send + Sync {
     async fn get_all(&self) -> Result<Vec<Role>, ServiceError>;
 
     /// Get a role by its id.
-    async fn get_by_id(&self, id: Uuid) -> Result<Option<Role>, ServiceError>;
+    async fn get_by_id(&self, id: Uuid) -> Result<Role, ServiceError>;
 }
 
 #[derive(Clone)]
@@ -33,7 +33,7 @@ impl IRoleService for RoleService {
         Ok(roles)
     }
 
-    async fn get_by_id(&self, id: Uuid) -> Result<Option<Role>, ServiceError> {
+    async fn get_by_id(&self, id: Uuid) -> Result<Role, ServiceError> {
         let role = self.roles.get_by_id(id).await?;
         Ok(role)
     }

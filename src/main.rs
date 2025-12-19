@@ -17,6 +17,7 @@ use axum::Router;
 use database::Database;
 use dotenvy::dotenv;
 use recipes::router as recipe_router;
+use roles::router as role_router;
 use services::ServiceContainer;
 use sessions::router as session_router;
 use std::net::SocketAddr;
@@ -48,6 +49,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .nest("/api/users", user_router())
         .nest("/api/auth", auth_router())
         .nest("/api/sessions", session_router())
+        .nest("/api/roles", role_router())
         .fallback_service(
             ServeDir::new("static").not_found_service(ServeFile::new("static/index.html")),
         )
