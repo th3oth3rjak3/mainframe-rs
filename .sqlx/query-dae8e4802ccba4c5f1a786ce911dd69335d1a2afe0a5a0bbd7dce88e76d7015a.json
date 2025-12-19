@@ -6,12 +6,12 @@
       {
         "name": "id: uuid::Uuid",
         "ordinal": 0,
-        "type_info": "Text"
+        "type_info": "Blob"
       },
       {
         "name": "recipe_id: uuid::Uuid",
         "ordinal": 1,
-        "type_info": "Text"
+        "type_info": "Blob"
       },
       {
         "name": "position",

@@ -1,12 +1,12 @@
 {
   "db_name": "SQLite",
-  "query": "\n            SELECT \n                id as \"id: uuid::Uuid\", \n                email, \n                first_name, \n                last_name, \n                username, \n                password_hash,\n                last_login,\n                failed_login_attempts,\n                last_failed_login_attempt,\n                is_disabled,\n                created_at,\n                updated_at\n            FROM users \n            WHERE id = ?;",
+  "query": "\n            SELECT \n                id as \"id: uuid::Uuid\", \n                email, \n                first_name, \n                last_name, \n                username, \n                password_hash,\n                password_expiration,\n                last_login,\n                is_disabled,\n                failed_login_attempts,\n                last_failed_login_attempt,\n                created_at,\n                updated_at\n            FROM users \n            WHERE LOWER(username) = LOWER(?)",
   "describe": {
     "columns": [
       {
         "name": "id: uuid::Uuid",
         "ordinal": 0,
-        "type_info": "Text"
+        "type_info": "Blob"
       },
       {
         "name": "email",
@@ -34,33 +34,38 @@
         "type_info": "Text"
       },
       {
-        "name": "last_login",
+        "name": "password_expiration",
         "ordinal": 6,
         "type_info": "Datetime"
       },
       {
-        "name": "failed_login_attempts",
+        "name": "last_login",
         "ordinal": 7,
-        "type_info": "Integer"
-      },
-      {
-        "name": "last_failed_login_attempt",
-        "ordinal": 8,
         "type_info": "Datetime"
       },
       {
         "name": "is_disabled",
-        "ordinal": 9,
+        "ordinal": 8,
         "type_info": "Bool"
       },
       {
-        "name": "created_at",
+        "name": "failed_login_attempts",
+        "ordinal": 9,
+        "type_info": "Integer"
+      },
+      {
+        "name": "last_failed_login_attempt",
         "ordinal": 10,
         "type_info": "Datetime"
       },
       {
-        "name": "updated_at",
+        "name": "created_at",
         "ordinal": 11,
+        "type_info": "Datetime"
+      },
+      {
+        "name": "updated_at",
+        "ordinal": 12,
         "type_info": "Datetime"
       }
     ],
@@ -75,12 +80,13 @@
       false,
       false,
       true,
-      false,
       true,
       false,
+      false,
+      true,
       false,
       false
     ]
   },
-  "hash": "49802907810574680ec250d728665b5e5b6a46db63a3401b3c35c3966c82182a"
+  "hash": "fb0fea1c941d9a2e24727c9805da1906625af78bc621392c18a676e4a3c0ee7a"
 }

@@ -1,12 +1,12 @@
 {
   "db_name": "SQLite",
-  "query": "\n            SELECT \n                id as \"id: uuid::Uuid\", \n                email, \n                first_name, \n                last_name, \n                username, \n                password_hash,\n                last_login,\n                is_disabled,\n                failed_login_attempts,\n                last_failed_login_attempt,\n                created_at,\n                updated_at\n            FROM users",
+  "query": "\n            SELECT \n                id as \"id: uuid::Uuid\", \n                email, \n                first_name, \n                last_name, \n                username, \n                password_hash,\n                password_expiration,\n                last_login,\n                failed_login_attempts,\n                last_failed_login_attempt,\n                is_disabled,\n                created_at,\n                updated_at\n            FROM users \n            WHERE id = ?;",
   "describe": {
     "columns": [
       {
         "name": "id: uuid::Uuid",
         "ordinal": 0,
-        "type_info": "Text"
+        "type_info": "Blob"
       },
       {
         "name": "email",
@@ -34,14 +34,14 @@
         "type_info": "Text"
       },
       {
-        "name": "last_login",
+        "name": "password_expiration",
         "ordinal": 6,
         "type_info": "Datetime"
       },
       {
-        "name": "is_disabled",
+        "name": "last_login",
         "ordinal": 7,
-        "type_info": "Bool"
+        "type_info": "Datetime"
       },
       {
         "name": "failed_login_attempts",
@@ -54,18 +54,23 @@
         "type_info": "Datetime"
       },
       {
-        "name": "created_at",
+        "name": "is_disabled",
         "ordinal": 10,
+        "type_info": "Bool"
+      },
+      {
+        "name": "created_at",
+        "ordinal": 11,
         "type_info": "Datetime"
       },
       {
         "name": "updated_at",
-        "ordinal": 11,
+        "ordinal": 12,
         "type_info": "Datetime"
       }
     ],
     "parameters": {
-      "Right": 0
+      "Right": 1
     },
     "nullable": [
       false,
@@ -75,12 +80,13 @@
       false,
       false,
       true,
-      false,
+      true,
       false,
       true,
+      false,
       false,
       false
     ]
   },
-  "hash": "61fa1d64f50b1faf82e851e8f0073b6c5a539bbbf73eccc9af22c76071c06eef"
+  "hash": "93923eec134935b37af558a1439c2a139ea918f0c2429f38a8dfaf1d2f722981"
 }
