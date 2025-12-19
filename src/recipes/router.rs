@@ -12,8 +12,8 @@ use hyper::header;
 use serde::{self, Deserialize};
 use uuid::Uuid;
 
-use crate::authentication::AuthenticatedUser;
 use crate::errors::ApiError;
+use crate::extractors::authenticated_user::AuthenticatedUser;
 use crate::recipes::Recipe;
 use crate::recipes::RecipeRequest;
 use crate::services::ServiceContainer;

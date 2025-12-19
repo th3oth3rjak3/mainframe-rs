@@ -4,8 +4,9 @@ use time::{Duration, OffsetDateTime};
 use uuid::Uuid;
 
 use crate::{
-    authentication::{AuthenticatedUser, IAuthenticationRepository, LoginRequest},
+    authentication::{IAuthenticationRepository, LoginRequest},
     errors::{RepositoryError, ServiceError},
+    extractors::authenticated_user::AuthenticatedUser,
     roles::IRoleRepository,
     sessions::{ISessionRepository, Session},
     token::{self, SessionToken},

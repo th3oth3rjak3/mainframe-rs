@@ -1,20 +1,23 @@
 use crate::{
-    authentication::{AuthenticatedUser, LoginRequest},
+    authentication::{LoginRequest, SessionCookieHandled},
+    cookies,
     errors::ApiError,
+    extractors::authenticated_user::AuthenticatedUser,
     services::ServiceContainer,
     users::UserResponse,
 };
 use axum::{
     Json, Router,
+    body::Body,
     extract::State,
-    response::IntoResponse,
+    response::{IntoResponse, Response},
     routing::{get, post},
 };
 use axum_extra::extract::{
     CookieJar,
     cookie::{self, Cookie},
 };
-use time::{Duration, OffsetDateTime};
+use hyper::StatusCode;
 
 // Clippy lint triggered by utoipa macro expansion, not our code
 #[allow(clippy::needless_for_each)]
@@ -89,18 +92,17 @@ pub async fn refresh(auth: AuthenticatedUser) -> Result<impl IntoResponse, ApiEr
 pub async fn login(
     State(container): State<ServiceContainer>,
     Json(login): Json<LoginRequest>,
-) -> Result<impl IntoResponse, ApiError> {
+) -> Result<Response<Body>, ApiError> {
     let AuthenticatedUser { user, session } = container.auth_service().login(login).await?;
 
-    let cookie = Cookie::build(("session_id", session.token))
-        .path("/")
-        .http_only(true)
-        .secure(true)
-        .same_site(cookie::SameSite::Strict)
-        .expires(session.expires_at)
-        .build();
+    let cookie = cookies::build_session_cookie(session.token, session.expires_at);
     let jar = CookieJar::new().add(cookie);
-    Ok((jar, Json(user)))
+    // Build response manually so we can attach extensions
+    let mut response = (StatusCode::OK, jar, Json(user)).into_response();
+
+    response.extensions_mut().insert(SessionCookieHandled);
+
+    Ok(response)
 }
 
 #[utoipa::path(
@@ -120,19 +122,24 @@ pub async fn login(
 pub async fn logout(
     auth: AuthenticatedUser,
     State(container): State<ServiceContainer>,
-) -> Result<impl IntoResponse, ApiError> {
+) -> Result<Response<Body>, ApiError> {
     container.auth_service().logout(auth.session.id).await?;
 
-    let cookie = Cookie::build(("session_id", ""))
-        .path("/")
-        .http_only(true)
-        .secure(true)
-        .same_site(cookie::SameSite::Strict)
-        .expires(OffsetDateTime::now_utc().saturating_sub(Duration::hours(1)))
-        .build();
+    let cookie = cookies::build_expired_session_cookie();
+
     let cookie_jar = CookieJar::new().add(cookie);
-    Ok((
+
+    // Build response manually so we can attach extensions
+    let mut response = (
+        StatusCode::OK,
         cookie_jar,
-        Json(serde_json::json!({"message": "Logged out successfully"})),
-    ))
+        Json(serde_json::json!({
+            "message": "Logged out successfully"
+        })),
+    )
+        .into_response();
+
+    response.extensions_mut().insert(SessionCookieHandled);
+
+    Ok(response)
 }

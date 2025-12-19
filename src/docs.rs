@@ -43,7 +43,7 @@ use utoipa::OpenApi;
 
 // Clippy lint triggered by utoipa macro expansion, not our code
 #[allow(clippy::needless_for_each)]
-#[derive(OpenApi)]
+#[derive(utoipa::OpenApi)]
 #[openapi(paths(), components(), tags())]
 pub struct ApiDoc;
 

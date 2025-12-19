@@ -1,10 +1,7 @@
 use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
 
-use crate::{
-    sessions::Session,
-    users::{User, UserResponse},
-};
+use crate::{extractors::authenticated_user::AuthenticatedUser, sessions::Session, users::User};
 
 #[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
 pub struct LoginRequest {
@@ -18,12 +15,6 @@ pub struct LoginDetails {
     pub user: User,
 }
 
-#[derive(Debug, Clone)]
-pub struct AuthenticatedUser {
-    pub user: UserResponse,
-    pub session: Session,
-}
-
 impl From<LoginDetails> for AuthenticatedUser {
     fn from(value: LoginDetails) -> Self {
         Self {
@@ -32,3 +23,7 @@ impl From<LoginDetails> for AuthenticatedUser {
         }
     }
 }
+
+/// Marker indicating the handler explicitly managed the session cookie
+#[derive(Debug, Clone, Copy)]
+pub struct SessionCookieHandled;

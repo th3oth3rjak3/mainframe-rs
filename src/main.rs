@@ -1,9 +1,11 @@
-mod auth;
 mod authentication;
 mod background_jobs;
+mod cookies;
 mod database;
 mod docs;
 mod errors;
+mod extractors;
+mod middleware;
 mod recipes;
 mod roles;
 mod services;
@@ -27,7 +29,7 @@ use tracing_subscriber::EnvFilter;
 use users::router as user_router;
 use utoipa_scalar::{Scalar, Servable};
 
-use crate::{background_jobs::spawn_cleanup_task, docs::ApiDoc};
+use crate::{background_jobs::spawn_cleanup_task, docs::ApiDoc, middleware::auth_middleware};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -50,6 +52,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .nest("/api/auth", auth_router())
         .nest("/api/sessions", session_router())
         .nest("/api/roles", role_router())
+        .layer(axum::middleware::from_fn_with_state(
+            container.clone(),
+            auth_middleware,
+        ))
         .fallback_service(
             ServeDir::new("static").not_found_service(ServeFile::new("static/index.html")),
         )

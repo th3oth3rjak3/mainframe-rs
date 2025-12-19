@@ -1,7 +1,7 @@
 use axum::{Json, Router, extract::State, routing::get};
 
 use crate::{
-    auth::AdminUser, errors::ApiError, services::ServiceContainer, sessions::SessionSummary,
+    errors::ApiError, extractors::AdminUser, services::ServiceContainer, sessions::SessionSummary,
 };
 
 pub fn router() -> Router<ServiceContainer> {

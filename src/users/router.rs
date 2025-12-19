@@ -10,9 +10,8 @@ use hyper::{HeaderMap, StatusCode, header};
 use uuid::Uuid;
 
 use crate::{
-    auth::AdminUser,
-    authentication::AuthenticatedUser,
     errors::ApiError,
+    extractors::{AdminUser, authenticated_user::AuthenticatedUser},
     services::ServiceContainer,
     users::{
         CreateUserRequest, UpdatePasswordRequest, UpdateUserRequest, UserBaseResponse, UserResponse,

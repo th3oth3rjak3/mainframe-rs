@@ -5,7 +5,7 @@ use axum::{
 };
 use uuid::Uuid;
 
-use crate::{auth::AdminUser, errors::ApiError, roles::Role, services::ServiceContainer};
+use crate::{errors::ApiError, extractors::AdminUser, roles::Role, services::ServiceContainer};
 
 // Clippy lint triggered by utoipa macro expansion, not our code
 #[allow(clippy::needless_for_each)]
