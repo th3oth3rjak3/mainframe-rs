@@ -1,4 +1,4 @@
-import { Calendar, ChevronUp, Home, Inbox, Search, Settings, User2 } from "lucide-react";
+import { Book, Calendar, ChevronUp, Home, Inbox, Search, Settings, User2 } from "lucide-react";
 
 import {
   Sidebar,
@@ -21,6 +21,7 @@ import {
 import { ModeToggle } from "./mode-toggle";
 import { useAuthStore } from "@/features/auth/authStore";
 import { toast } from "sonner";
+import { ROLES } from "@/features/auth/types";
 
 // Menu items.
 const items = [
@@ -28,26 +29,37 @@ const items = [
     title: "Home",
     url: "#",
     icon: Home,
+    role: null,
   },
   {
     title: "Inbox",
     url: "#",
     icon: Inbox,
+    role: null,
   },
   {
     title: "Calendar",
     url: "#",
     icon: Calendar,
+    role: null,
+  },
+  {
+    title: "Recipes",
+    url: "#",
+    icon: Book,
+    role: ROLES.RecipeUser,
   },
   {
     title: "Search",
     url: "#",
     icon: Search,
+    role: null,
   },
   {
     title: "Settings",
     url: "#",
     icon: Settings,
+    role: null,
   },
 ];
 
@@ -56,11 +68,12 @@ type AppSidebarProps = {
 };
 
 export default function AppSidebar({ variant }: AppSidebarProps) {
-  const signOut = useAuthStore((state) => state.signOut);
+  const logout = useAuthStore((state) => state.logout);
+  const hasRole = useAuthStore((state) => state.hasRole);
 
   const handleSignOut = async () => {
     try {
-      await signOut();
+      await logout();
       toast.success("Signed out successfully");
     } catch (error) {
       if (error instanceof Error) {
@@ -79,16 +92,18 @@ export default function AppSidebar({ variant }: AppSidebarProps) {
           <ModeToggle />
           <SidebarGroupContent>
             <SidebarMenu>
-              {items.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild>
-                    <a href={item.url}>
-                      <item.icon />
-                      <span>{item.title}</span>
-                    </a>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
+              {items.map((item) =>
+                item.role === null || hasRole(item.role) ? (
+                  <SidebarMenuItem key={item.title}>
+                    <SidebarMenuButton asChild>
+                      <a href={item.url}>
+                        <item.icon />
+                        <span>{item.title}</span>
+                      </a>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                ) : null
+              )}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>

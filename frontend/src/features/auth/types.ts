@@ -89,7 +89,7 @@ export const LoginResponseSchema = v.object({
       v.transform((str) => new Date(str))
     )
   ),
-  roles: v.array(RoleNameSchema), // Just role names, not full Role objects
+  roles: v.array(RoleSchema),
 });
 
 export type LoginResponse = v.InferOutput<typeof LoginResponseSchema>;
@@ -97,7 +97,7 @@ export type LoginResponse = v.InferOutput<typeof LoginResponseSchema>;
 /**
  * Sign in request payload
  */
-export type SignInRequest = {
+export type LoginRequest = {
   username: string;
   password: string;
 };
@@ -113,7 +113,7 @@ export class AuthenticatedUser {
   firstName: string;
   lastName: string;
   lastLogin: Date | null;
-  roles: string[];
+  roles: Role[];
 
   constructor(loginResponse: LoginResponse) {
     this.username = loginResponse.username;
@@ -125,7 +125,7 @@ export class AuthenticatedUser {
   }
 
   hasRole(name: RoleName): boolean {
-    return this.roles.includes(name);
+    return this.roles.map(r => r.name).includes(name);
   }
 
   isAdmin(): boolean {

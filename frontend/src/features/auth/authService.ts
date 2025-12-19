@@ -1,7 +1,7 @@
 import * as v from "valibot";
 import { httpClient } from "@/lib/httpClient";
 import { handleApiRequest } from "@/lib/apiHelpers";
-import { type LoginResponse, LoginResponseSchema, type SignInRequest } from "@/features/auth/types";
+import { type LoginResponse, LoginResponseSchema, type LoginRequest } from "@/features/auth/types";
 
 // @ts-ignore
 import type { ApiError } from "@/lib/apiHelpers";
@@ -14,13 +14,20 @@ export interface IAuthService {
    * @throws {ApiError} When authentication fails or server returns an error
    * @throws {ValiError} When the server response doesn't match the expected schema.
    */
-  signIn(request: SignInRequest): Promise<LoginResponse>;
+  signIn(request: LoginRequest): Promise<LoginResponse>;
 
   /**
    * Sign out the current user
    * @throws {ApiError} When the request fails
    */
   signOut(): Promise<void>;
+
+  /**
+   * Get the current user details from the backend when logged in.
+   * @throws {ApiError} When authentication fails or server returns an error
+   * @throws {ValiError} When the server response doesn't match the expected schema.
+   */
+  getCurrentUser(): Promise<LoginResponse>;
 }
 
 export const authService: IAuthService = {
@@ -37,4 +44,11 @@ export const authService: IAuthService = {
       await httpClient.post("auth/logout");
     });
   },
+
+  getCurrentUser: async () => {
+    return handleApiRequest(async () => {
+      const response = await httpClient.get("auth/me").json();
+      return v.parse(LoginResponseSchema, response);
+    });
+  }
 };

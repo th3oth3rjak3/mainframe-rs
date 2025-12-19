@@ -1,18 +1,42 @@
-import { ThemeProvider } from "./components/providers/theme-provider";
+import { ThemeProvider } from "@/components/providers/theme-provider";
 import { Route, Routes } from "react-router-dom";
 import Layout from "@/components/layout/layout";
 import { Toaster } from "sonner";
 import Dashboard from "@/pages/dashboard";
+import Login from "@/pages/login";
+import { useAuthStore } from "./features/auth/authStore";
+import { useEffect } from "react";
+import SignUp from "./pages/sign-up";
+import ForgotPassword from "./pages/forgot-password";
+import { RequireAuth } from "./components/layout/require-auth";
 
 function App() {
+  const initialize = useAuthStore((state) => state.initialize);
+  const isLoading = useAuthStore((state) => state.isLoading);
+
+  useEffect(() => {
+    initialize();
+  }, [initialize]);
+
+  if (isLoading) {
+    return <></>;
+  }
+
   return (
     <ThemeProvider defaultTheme="system" storageKey="vite-ui-theme">
       <Toaster richColors />
-      <Layout>
-        <Routes>
-          <Route path="/" element={<Dashboard />} />
-        </Routes>
-      </Layout>
+
+      <Routes>
+        <Route path="/login" element={<Login />} />
+        <Route path="/sign-up" element={<SignUp />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+
+        <Route element={<RequireAuth />}>
+          <Route element={<Layout />}>
+            <Route path="/" element={<Dashboard />} />
+          </Route>
+        </Route>
+      </Routes>
     </ThemeProvider>
   );
 }
