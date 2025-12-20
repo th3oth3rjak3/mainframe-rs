@@ -1,3 +1,5 @@
+use std::num::Wrapping;
+
 use crate::{
     errors::RepositoryError,
     recipes::{Ingredient, Instruction, Recipe, RecipeBase, RecipeRequest},
@@ -65,14 +67,38 @@ impl IRecipeRepository for SqlxRecipeRepository {
         page_size: i64,
         name_query: Option<&str>,
     ) -> Result<(Vec<RecipeBase>, i64), RepositoryError> {
-        let offset = (page - 1) * page_size;
+        if page < 1 {
+            return Err(RepositoryError::ArgumentOutOfRange {
+                field: "page",
+                value: format!("page={page}"),
+            });
+        }
 
+        if page_size < 1 {
+            return Err(RepositoryError::ArgumentOutOfRange {
+                field: "page_size",
+                value: format!("page_size={page_size}"),
+            });
+        }
+
+        let offset = Wrapping(page - 1) * Wrapping(page_size);
+        if offset.0 < 0 || offset.0 > i64::MAX {
+            return Err(RepositoryError::ArgumentOutOfRange {
+                field: "offset",
+                value: format!("page={}; page_size={}", page, page_size),
+            });
+        }
+        let offset = offset.0;
+
+        // Example: input -> Some("apple") -> COALESCE('%' || 'apple' || '%', '%') -> matches apple
+        // Example: input -> None -> COALESCE('%' || NULL || '%', '%') -> becomes '%' and matches anything
         let total: i64 = sqlx::query_scalar!(
-            "SELECT COUNT(*) FROM recipes
-             WHERE (user_id = ? OR is_public = true)
-               AND (? IS NULL OR name LIKE '%' || ? || '%')",
+            r#"
+            SELECT COUNT(*) FROM recipes
+            WHERE (user_id = ? OR is_public = true)
+            AND name LIKE COALESCE('%' || ? || '%', '%')
+            "#,
             user_id,
-            name_query,
             name_query
         )
         .fetch_one(&self.pool)
@@ -187,7 +213,7 @@ impl IRecipeRepository for SqlxRecipeRepository {
             request.estimated_duration,
             request.is_public,
             user_id
-        ).fetch_one(&mut *tx)
+        ).execute(&mut *tx)
         .await?;
 
         for ingredient in &request.ingredients {

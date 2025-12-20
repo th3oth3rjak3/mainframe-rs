@@ -79,9 +79,12 @@ impl From<ServiceError> for ApiError {
                 } => Self::NotFound {
                     entity,
                     property,
-                    value,
+                    value: value.to_string(),
                 },
                 RepositoryError::Database(e) => Self::Internal(e.into()),
+                RepositoryError::ArgumentOutOfRange { .. } => {
+                    Self::BadRequest(format!("bad request: {}", repo_err.to_string()))
+                }
             },
             ServiceError::NotFound {
                 entity,
@@ -193,12 +196,20 @@ pub enum ServiceError {
 /// of data persistence, such as database connection issues or missing records.
 #[derive(Debug, Error)]
 pub enum RepositoryError {
+    /// Low‑level SQLx errors (connection failures, constraint violations, …).
     #[error("database error: {0}")]
     Database(#[from] sqlx::Error),
+
+    /// A record was not found in the database.
     #[error("{entity} with {property} {value} not found")]
     NotFound {
         entity: &'static str,
         property: &'static str,
         value: String,
     },
+
+    /// an argument passed to a repository method is outside
+    /// the acceptable range (e.g., negative page number, zero page size).
+    #[error("argument out of range: {field} with value `{value}` is not allowed")]
+    ArgumentOutOfRange { field: &'static str, value: String },
 }
