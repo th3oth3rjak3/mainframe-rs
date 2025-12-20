@@ -12,7 +12,7 @@ import { RequireAuth } from "./components/layout/require-auth";
 
 function App() {
   const initialize = useAuthStore((state) => state.initialize);
-  const isLoading = useAuthStore((state) => state.isLoading);
+  const isLoading = useAuthStore((state) => state.isInitializing);
 
   useEffect(() => {
     initialize();

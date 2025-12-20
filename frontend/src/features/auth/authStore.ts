@@ -6,7 +6,7 @@ import { ApiError } from "@/lib/apiHelpers";
 
 type AuthStore = {
   user: AuthenticatedUser | null;
-  isLoading: boolean;
+  isInitializing: boolean;
   error: string | null;
   isLoggedIn: boolean;
 
@@ -36,13 +36,12 @@ type AuthStore = {
 
 export const useAuthStore = create<AuthStore>((set, get) => ({
   user: null,
-  isLoading: true,
+  isInitializing: true,
   error: null,
   isLoggedIn: false,
 
   login: async (request, service = authService) => {
     try {
-      set({ error: null });
       const response = await service.signIn(request);
       const user = new AuthenticatedUser(response);
       set({ user, error: null, isLoggedIn: true });
@@ -68,11 +67,11 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
     try {
       const response = await service.getCurrentUser();
       const user = new AuthenticatedUser(response);
-      set({ user, error: null, isLoading: false, isLoggedIn: true });
+      set({ user, error: null, isInitializing: false, isLoggedIn: true });
     } catch (error) {
       // It's not an error to not be logged in when checking the user status.
       if (error instanceof ApiError && error.statusCode === 401) {
-        set({ user: null, isLoading: false, error: null });
+        set({ user: null, isInitializing: false, error: null });
         return;
       }
       const message = error instanceof ApiError ? error.message : "Error occurred getting user details";
@@ -90,3 +89,5 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
     return user.hasRole(name);
   }
 }));
+
+
