@@ -1,12 +1,11 @@
 import { AuthenticatedUser, LoginResponseSchema, type LoginRequest } from "@/features/auth/types";
-import { handleApiRequest } from "@/utils/apiHelpers";
 import { httpClient } from "@/utils/httpClient";
 import * as v from "valibot";
 
-import { ApiError } from "@/utils/apiHelpers";
 // @ts-ignore
 import type { ValiError } from "valibot";
 import { setAuthStore } from "../stores/authStore";
+import { HTTPError } from "ky";
 
 export interface IAuthService {
   /**
@@ -33,83 +32,49 @@ export interface IAuthService {
 
 export const authService: IAuthService = {
   initialize: async () => {
-    return handleApiRequest(async () => {
-      try {
-        const response = await httpClient.get("auth/me").json();
-        const result = v.parse(LoginResponseSchema, response);
-        const user = new AuthenticatedUser(result);
+    try {
+      const response = await httpClient.get("auth/me").json();
+      const result = v.parse(LoginResponseSchema, response);
+      const user = new AuthenticatedUser(result);
 
+      setAuthStore({
+        user,
+        isInitializing: false,
+        isLoggedIn: true,
+      });
+    } catch (error) {
+      if (error instanceof HTTPError && error.response.status === 401) {
+        // not authorized is okay, we're just not logged in yet.
         setAuthStore({
-          user,
-          error: null,
+          user: null,
           isInitializing: false,
-          isLoggedIn: true,
-        });
-      } catch (error) {
-        if (error instanceof ApiError && error.statusCode === 401) {
-          // not authorized is okay, we're just not logged in yet.
-          setAuthStore({
-            user: null,
-            isInitializing: false,
-            error: null,
-            isLoggedIn: false,
-          });
-          return;
-        }
-
-        const message =
-          error instanceof ApiError ? error.message : "Error occurred getting user details";
-
-        setAuthStore({
-          error: message,
-          isInitializing: false,
+          isLoggedIn: false,
         });
 
-        throw error;
+        return;
       }
-    });
+
+      setAuthStore({
+        isInitializing: false,
+      });
+
+      throw error;
+    }
   },
   login: async (request) => {
-    return handleApiRequest(async () => {
-      try {
-        const response = await httpClient.post("auth/login", { json: request }).json();
-        const loginResponse = v.parse(LoginResponseSchema, response);
-        const user = new AuthenticatedUser(loginResponse);
-        setAuthStore({
-          user,
-          error: null,
-          isLoggedIn: true,
-        });
-      } catch (error) {
-        const message = error instanceof ApiError ? error.message : "Login failed";
-
-        setAuthStore({
-          error: message,
-          user: null,
-          isLoggedIn: false,
-        });
-
-        throw error;
-      }
+    const response = await httpClient.post("auth/login", { json: request }).json();
+    const loginResponse = v.parse(LoginResponseSchema, response);
+    const user = new AuthenticatedUser(loginResponse);
+    setAuthStore({
+      user,
+      isLoggedIn: true,
     });
   },
-
   logout: async () => {
-    return handleApiRequest(async () => {
-      try {
-        await httpClient.post("auth/logout");
-
-        setAuthStore({
-          user: null,
-          error: null,
-          isLoggedIn: false,
-        });
-      } catch (error) {
-        const message = error instanceof ApiError ? error.message : "Logout failed";
-
-        setAuthStore({ error: message });
-        throw error;
-      }
+    await httpClient.post("auth/logout");
+    setAuthStore({
+      user: null,
+      isLoggedIn: false,
     });
   },
 };

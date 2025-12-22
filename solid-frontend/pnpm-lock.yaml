@@ -8,6 +8,9 @@ importers:
 
   .:
     dependencies:
+      '@corvu/drawer':
+        specifier: ^0.2.4
+        version: 0.2.4(solid-js@1.9.10)
       '@kobalte/core':
         specifier: ^0.13.11
         version: 0.13.11(solid-js@1.9.10)
@@ -17,6 +20,12 @@ importers:
       '@tailwindcss/vite':
         specifier: ^4.1.18
         version: 4.1.18(vite@7.3.0(@types/node@24.10.4)(jiti@2.6.1)(lightningcss@1.30.2))
+      '@tanstack/solid-form':
+        specifier: ^1.27.5
+        version: 1.27.5(solid-js@1.9.10)
+      '@tanstack/valibot-form-adapter':
+        specifier: ^0.42.1
+        version: 0.42.1(valibot@1.2.0(typescript@5.9.3))
       cva:
         specifier: 1.0.0-beta.4
         version: 1.0.0-beta.4(typescript@5.9.3)
@@ -29,6 +38,9 @@ importers:
       solid-js:
         specifier: ^1.9.10
         version: 1.9.10
+      somoto:
+        specifier: ^0.0.2
+        version: 0.0.2(solid-js@1.9.10)
       tailwind-merge:
         specifier: ^3.4.0
         version: 3.4.0
@@ -140,6 +152,21 @@ packages:
   '@babel/types@7.28.5':
     resolution: {integrity: sha512-qQ5m48eI/MFLQ5PxQj4PFaprjyCTLI37ElWMmNs0K8Lk3dVeOdNpB3ks8jc7yM5CDmVC73eMVk/trk3fgmrUpA==}
     engines: {node: '>=6.9.0'}
+
+  '@corvu/dialog@0.2.4':
+    resolution: {integrity: sha512-n54vJq+fOy8GVrnYBdJpD6JXNuyx7LOeMrRxwzAvZnYGpW8+AA12tnb/P/2emJj/HjOO5otheGKb0breshdFlA==}
+    peerDependencies:
+      solid-js: ^1.8
+
+  '@corvu/drawer@0.2.4':
+    resolution: {integrity: sha512-7jQoGZ8ROB9CmXam2nMY2wEskU3IoFwZQywkF/7vrBc/edGsPv7mOVQ1GN6G+4nd7nrMZ3UtqHAhmRh9V0azlw==}
+    peerDependencies:
+      solid-js: ^1.8
+
+  '@corvu/utils@0.3.2':
+    resolution: {integrity: sha512-ZWlyWEE8qV9+CB9OAyo2bTrZGXQN9ZeM+JfYv89zoR+lRACKTDuoOZEdiyL8Uc7U5dUSH1uTqKhTTnaHWb+wZA==}
+    peerDependencies:
+      solid-js: ^1.8
 
   '@corvu/utils@0.4.2':
     resolution: {integrity: sha512-Ox2kYyxy7NoXdKWdHeDEjZxClwzO4SKM8plAaVwmAJPxHMqA0rLOoAsa+hBDwRLpctf+ZRnAd/ykguuJidnaTA==}
@@ -473,6 +500,11 @@ packages:
     peerDependencies:
       solid-js: ^1.6.12
 
+  '@solid-primitives/memo@1.4.3':
+    resolution: {integrity: sha512-CA+n9yaoqbYm+My5tY2RWb6EE16tVyehM4GzwQF4vCwvjYPAYk1JSRIVuMC0Xuj5ExD2XQJE5E2yAaKY2HTUsg==}
+    peerDependencies:
+      solid-js: ^1.6.12
+
   '@solid-primitives/props@3.2.2':
     resolution: {integrity: sha512-lZOTwFJajBrshSyg14nBMEP0h8MXzPowGO0s3OeiR3z6nXHTfj0FhzDtJMv+VYoRJKQHG2QRnJTgCzK6erARAw==}
     peerDependencies:
@@ -490,6 +522,11 @@ packages:
 
   '@solid-primitives/rootless@1.5.2':
     resolution: {integrity: sha512-9HULb0QAzL2r47CCad0M+NKFtQ+LrGGNHZfteX/ThdGvKIg2o2GYhBooZubTCd/RTu2l2+Nw4s+dEfiDGvdrrQ==}
+    peerDependencies:
+      solid-js: ^1.6.12
+
+  '@solid-primitives/scheduled@1.5.2':
+    resolution: {integrity: sha512-/j2igE0xyNaHhj6kMfcUQn5rAVSTLbAX+CDEBm25hSNBmNiHLu2lM7Usj2kJJ5j36D67bE8wR1hBNA8hjtvsQA==}
     peerDependencies:
       solid-js: ^1.6.12
 
@@ -605,6 +642,38 @@ packages:
     resolution: {integrity: sha512-jVA+/UpKL1vRLg6Hkao5jldawNmRo7mQYrZtNHMIVpLfLhDml5nMRUo/8MwoX2vNXvnaXNNMedrMfMugAVX1nA==}
     peerDependencies:
       vite: ^5.2.0 || ^6 || ^7
+
+  '@tanstack/devtools-event-client@0.4.0':
+    resolution: {integrity: sha512-RPfGuk2bDZgcu9bAJodvO2lnZeHuz4/71HjZ0bGb/SPg8+lyTA+RLSKQvo7fSmPSi8/vcH3aKQ8EM9ywf1olaw==}
+    engines: {node: '>=18'}
+
+  '@tanstack/form-core@0.42.1':
+    resolution: {integrity: sha512-jTU0jyHqFceujdtPNv3jPVej1dTqBwa8TYdIyWB5BCwRVUBZEp1PiYEBkC9r92xu5fMpBiKc+JKud3eeVjuMiA==}
+
+  '@tanstack/form-core@1.27.5':
+    resolution: {integrity: sha512-A8EriWfn+2QsxEbzt6AXn6CC6ILv3VPDXhBDAeE5LTiCHryy7xuj+zo1Q2JWBkhJxS1AuEgY1BZr5AP2mWiHQQ==}
+
+  '@tanstack/pacer-lite@0.1.1':
+    resolution: {integrity: sha512-y/xtNPNt/YeyoVxE/JCx+T7yjEzpezmbb+toK8DDD1P4m7Kzs5YR956+7OKexG3f8aXgC3rLZl7b1V+yNUSy5w==}
+    engines: {node: '>=18'}
+
+  '@tanstack/solid-form@1.27.5':
+    resolution: {integrity: sha512-HzrtQTnHVX/PB33v0MxIV9tyQ7BSu9xsOAykBRnhpPE3sApyQ1j1LKqUupmo3iniqwcmsngy1U4zWydcpHp1LA==}
+    peerDependencies:
+      solid-js: '>=1.9.9'
+
+  '@tanstack/solid-store@0.7.7':
+    resolution: {integrity: sha512-DnEZbqQ+pg68BguHz17VFukfp+6JaTk8nE2MhdVliU8bhsOFlTMsmVHp/4gMoQ1AkmAOMFiBsSliROCaaeJzvg==}
+    peerDependencies:
+      solid-js: ^1.6.0
+
+  '@tanstack/store@0.7.7':
+    resolution: {integrity: sha512-xa6pTan1bcaqYDS9BDpSiS63qa6EoDkPN9RsRaxHuDdVDNntzq3xNwR5YKTU/V3SkSyC9T4YVOPh2zRQN0nhIQ==}
+
+  '@tanstack/valibot-form-adapter@0.42.1':
+    resolution: {integrity: sha512-MUWjxGm8ZVDEqW79UET9U0hh87r8hj1oM0dTjCUHnHjvyIHpItk3SDkv4OjBSBoy9Y4kWvCF+0NQ3KM/omdGqg==}
+    peerDependencies:
+      valibot: ^1.0.0 || ^1.0.0-beta.4 || ^1.0.0-rc
 
   '@types/babel__core@7.20.5':
     resolution: {integrity: sha512-qoQprZvz5wQFJwMDqeseRXWv3rqMvhgpbXFfVyWhbx9X47POIA6i/+dXefEmZKoAgOaTdaIgNSMqMIU61yRyzA==}
@@ -884,11 +953,26 @@ packages:
     resolution: {integrity: sha512-RbcPH1n5cfwKrru7v7+zrZvjLurgHhGyso3HTyGtRivGWgYjbOmGuivCQaORNELjNONoK35nj28EoWul9sb1zQ==}
     engines: {node: '>=10'}
 
+  solid-dismissible@0.1.1:
+    resolution: {integrity: sha512-9kcKBJIMdS+586cA1g63HYWxKh3h89leeNHbPZ1csYjuni+NvPBtNr11l0iEX2AKKEt6FHk6qNhc/gjoYAW1pA==}
+    peerDependencies:
+      solid-js: ^1.8
+
+  solid-focus-trap@0.1.9:
+    resolution: {integrity: sha512-LTyNki6GUJPRLXV5uMWPkYClB07SUMubbr2EkAddiR0CJCF/I283txilMU9RURSr/P8EewMfXWu2o3aWrK7A5A==}
+    peerDependencies:
+      solid-js: ^1.8
+
   solid-js@1.9.10:
     resolution: {integrity: sha512-Coz956cos/EPDlhs6+jsdTxKuJDPT7B5SVIWgABwROyxjY7Xbr8wkzD68Et+NxnV7DLJ3nJdAC2r9InuV/4Jew==}
 
   solid-presence@0.1.8:
     resolution: {integrity: sha512-pWGtXUFWYYUZNbg5YpG5vkQJyOtzn2KXhxYaMx/4I+lylTLYkITOLevaCwMRN+liCVk0pqB6EayLWojNqBFECA==}
+    peerDependencies:
+      solid-js: ^1.8
+
+  solid-presence@0.2.0:
+    resolution: {integrity: sha512-YM92o+jvpzX3XGaD4rLYmq/Kc2ZVh47GSCLEufHBFQQIurvZTs8SoGJxO8BJGNDxBKdcS8F3dYhW1SDXp4BNjA==}
     peerDependencies:
       solid-js: ^1.8
 
@@ -901,6 +985,17 @@ packages:
     resolution: {integrity: sha512-F3aPsX6hVw9ttm5LYlth8Q15x6MlI/J3Dn+o3EQyRTtTxidepSTwAYdozt01/YA+7ObcciagGEyXIopGZzQtbA==}
     peerDependencies:
       solid-js: ^1.3
+
+  solid-transition-size@0.1.4:
+    resolution: {integrity: sha512-ocHVnbfy23CgfaH4cEUR/AFg0Y3CEL8Oh3n9Qv8OHFJgPh+zkmERKZQfi/xH5XvxDCizg8VjPrVUhiHB1Gza8g==}
+    peerDependencies:
+      solid-js: ^1.8
+
+  somoto@0.0.2:
+    resolution: {integrity: sha512-2e7V2O16D+DkE3z0kBdA4AnVYOi4yLLwIrKe3SE1kRAicwALrw+kx57/SRqSbEXaIsZrIPhGfL7VcRQE+tI0Bg==}
+    engines: {node: '>=18'}
+    peerDependencies:
+      solid-js: '>=1.6.0'
 
   source-map-js@1.2.1:
     resolution: {integrity: sha512-UXWMKhLOwVKb728IUtQPXxfYU+usdybtUrK/8uGE8CQMvrhOpwvzDBwj0QhSL7MQc7vIsISBG8VQ8+IDQxpfQA==}
@@ -1121,6 +1216,28 @@ snapshots:
     dependencies:
       '@babel/helper-string-parser': 7.27.1
       '@babel/helper-validator-identifier': 7.28.5
+
+  '@corvu/dialog@0.2.4(solid-js@1.9.10)':
+    dependencies:
+      '@corvu/utils': 0.4.2(solid-js@1.9.10)
+      solid-dismissible: 0.1.1(solid-js@1.9.10)
+      solid-focus-trap: 0.1.9(solid-js@1.9.10)
+      solid-js: 1.9.10
+      solid-presence: 0.2.0(solid-js@1.9.10)
+      solid-prevent-scroll: 0.1.10(solid-js@1.9.10)
+
+  '@corvu/drawer@0.2.4(solid-js@1.9.10)':
+    dependencies:
+      '@corvu/dialog': 0.2.4(solid-js@1.9.10)
+      '@corvu/utils': 0.4.2(solid-js@1.9.10)
+      '@solid-primitives/memo': 1.4.3(solid-js@1.9.10)
+      solid-js: 1.9.10
+      solid-transition-size: 0.1.4(solid-js@1.9.10)
+
+  '@corvu/utils@0.3.2(solid-js@1.9.10)':
+    dependencies:
+      '@floating-ui/dom': 1.7.4
+      solid-js: 1.9.10
 
   '@corvu/utils@0.4.2(solid-js@1.9.10)':
     dependencies:
@@ -1354,6 +1471,12 @@ snapshots:
       '@solid-primitives/utils': 6.3.2(solid-js@1.9.10)
       solid-js: 1.9.10
 
+  '@solid-primitives/memo@1.4.3(solid-js@1.9.10)':
+    dependencies:
+      '@solid-primitives/scheduled': 1.5.2(solid-js@1.9.10)
+      '@solid-primitives/utils': 6.3.2(solid-js@1.9.10)
+      solid-js: 1.9.10
+
   '@solid-primitives/props@3.2.2(solid-js@1.9.10)':
     dependencies:
       '@solid-primitives/utils': 6.3.2(solid-js@1.9.10)
@@ -1375,6 +1498,10 @@ snapshots:
   '@solid-primitives/rootless@1.5.2(solid-js@1.9.10)':
     dependencies:
       '@solid-primitives/utils': 6.3.2(solid-js@1.9.10)
+      solid-js: 1.9.10
+
+  '@solid-primitives/scheduled@1.5.2(solid-js@1.9.10)':
+    dependencies:
       solid-js: 1.9.10
 
   '@solid-primitives/static-store@0.1.2(solid-js@1.9.10)':
@@ -1466,6 +1593,38 @@ snapshots:
       '@tailwindcss/oxide': 4.1.18
       tailwindcss: 4.1.18
       vite: 7.3.0(@types/node@24.10.4)(jiti@2.6.1)(lightningcss@1.30.2)
+
+  '@tanstack/devtools-event-client@0.4.0': {}
+
+  '@tanstack/form-core@0.42.1':
+    dependencies:
+      '@tanstack/store': 0.7.7
+
+  '@tanstack/form-core@1.27.5':
+    dependencies:
+      '@tanstack/devtools-event-client': 0.4.0
+      '@tanstack/pacer-lite': 0.1.1
+      '@tanstack/store': 0.7.7
+
+  '@tanstack/pacer-lite@0.1.1': {}
+
+  '@tanstack/solid-form@1.27.5(solid-js@1.9.10)':
+    dependencies:
+      '@tanstack/form-core': 1.27.5
+      '@tanstack/solid-store': 0.7.7(solid-js@1.9.10)
+      solid-js: 1.9.10
+
+  '@tanstack/solid-store@0.7.7(solid-js@1.9.10)':
+    dependencies:
+      '@tanstack/store': 0.7.7
+      solid-js: 1.9.10
+
+  '@tanstack/store@0.7.7': {}
+
+  '@tanstack/valibot-form-adapter@0.42.1(valibot@1.2.0(typescript@5.9.3))':
+    dependencies:
+      '@tanstack/form-core': 0.42.1
+      valibot: 1.2.0(typescript@5.9.3)
 
   '@types/babel__core@7.20.5':
     dependencies:
@@ -1728,6 +1887,16 @@ snapshots:
 
   seroval@1.3.2: {}
 
+  solid-dismissible@0.1.1(solid-js@1.9.10):
+    dependencies:
+      '@corvu/utils': 0.4.2(solid-js@1.9.10)
+      solid-js: 1.9.10
+
+  solid-focus-trap@0.1.9(solid-js@1.9.10):
+    dependencies:
+      '@corvu/utils': 0.4.2(solid-js@1.9.10)
+      solid-js: 1.9.10
+
   solid-js@1.9.10:
     dependencies:
       csstype: 3.2.3
@@ -1735,6 +1904,11 @@ snapshots:
       seroval-plugins: 1.3.3(seroval@1.3.2)
 
   solid-presence@0.1.8(solid-js@1.9.10):
+    dependencies:
+      '@corvu/utils': 0.4.2(solid-js@1.9.10)
+      solid-js: 1.9.10
+
+  solid-presence@0.2.0(solid-js@1.9.10):
     dependencies:
       '@corvu/utils': 0.4.2(solid-js@1.9.10)
       solid-js: 1.9.10
@@ -1752,6 +1926,15 @@ snapshots:
       solid-js: 1.9.10
     transitivePeerDependencies:
       - supports-color
+
+  solid-transition-size@0.1.4(solid-js@1.9.10):
+    dependencies:
+      '@corvu/utils': 0.3.2(solid-js@1.9.10)
+      solid-js: 1.9.10
+
+  somoto@0.0.2(solid-js@1.9.10):
+    dependencies:
+      solid-js: 1.9.10
 
   source-map-js@1.2.1: {}
 
