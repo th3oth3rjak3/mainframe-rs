@@ -15,8 +15,24 @@ export function ModeToggle() {
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <SidebarGroupAction title="Toggle Theme" className="p-2 w-8 rounded-full">
-          <Sun className="h-4 w-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
-          <Moon className="absolute h-4 w-4 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
+          {/* Sun Icon: Visible in light mode */}
+          <Sun
+            className={`h-4 w-4 transition-all ${
+              theme === "light" ? "rotate-0 scale-100" : "-rotate-90 scale-0"
+            }`}
+          />
+          {/* Moon Icon: Visible in dark mode */}
+          <Moon
+            className={`absolute h-4 w-4 transition-all ${
+              theme === "dark" ? "rotate-0 scale-100" : "rotate-90 scale-0"
+            }`}
+          />
+          {/* Monitor Icon: Visible in system mode */}
+          <Monitor
+            className={`absolute h-4 w-4 transition-all ${
+              theme === "system" ? "rotate-0 scale-100" : "rotate-90 scale-0"
+            }`}
+          />
         </SidebarGroupAction>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">

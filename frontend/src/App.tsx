@@ -3,11 +3,11 @@ import { Route, Routes } from "react-router-dom";
 import Layout from "@/components/layout/layout";
 import { Toaster } from "sonner";
 import Dashboard from "@/pages/dashboard";
-import Login from "@/pages/login";
-import { useAuthStore } from "./features/auth/authStore";
+import Login from "@/features/auth/pages/login";
+import { useAuthStore } from "@/features/auth/stores/authStore";
 import { useEffect } from "react";
-import SignUp from "./pages/sign-up";
-import ForgotPassword from "./pages/forgot-password";
+import SignUp from "./features/auth/pages/sign-up";
+import ForgotPassword from "./features/auth/pages/forgot-password";
 import { RequireAuth } from "./components/layout/require-auth";
 import RolesList from "./pages/roles/roles-list";
 

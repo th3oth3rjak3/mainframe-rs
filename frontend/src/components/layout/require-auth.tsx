@@ -1,5 +1,5 @@
 import { Navigate, Outlet } from "react-router-dom";
-import { useAuthStore } from "@/features/auth/authStore";
+import { useAuthStore } from "@/features/auth/stores/authStore";
 
 export function RequireAuth() {
   const isLoggedIn = useAuthStore((s) => s.isLoggedIn);
