@@ -3,7 +3,7 @@ import { AuthenticatedUser, LoginResponseSchema, type LoginRequest } from "@/fea
 import type { RoleName } from "@/features/roles/types";
 import { HTTPError } from "ky";
 import * as v from "valibot";
-import { httpClient } from "@/lib/httpClient";
+import { httpClient } from "@/lib/http_client";
 
 type AuthStore = {
   user: AuthenticatedUser | null;

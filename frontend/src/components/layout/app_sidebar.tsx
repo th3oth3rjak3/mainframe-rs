@@ -17,12 +17,12 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { useAuthStore } from "@/features/auth/stores/authStore";
+} from "@/components/ui/dropdown_menu";
+import { useAuthStore } from "@/features/auth/stores/auth_store";
 import { AuthenticatedUser } from "@/features/auth/types";
 import { ROLES } from "@/features/roles/types";
 import { toast } from "sonner";
-import { ModeToggle } from "./mode-toggle";
+import { ModeToggle } from "./mode_toggle";
 import { Link, useLocation } from "react-router-dom";
 
 type Icon = typeof Home;
