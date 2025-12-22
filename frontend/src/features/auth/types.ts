@@ -64,14 +64,6 @@ export const LoginResponseSchema = v.object({
 export type LoginResponse = v.InferOutput<typeof LoginResponseSchema>;
 
 /**
- * Sign in request payload
- */
-export type LoginRequest = {
-  username: string;
-  password: string;
-};
-
-/**
  * AuthenticatedUser is the details of a user who has been successfully
  * logged into the application. The only way to create one is by getting
  * a successful login response and passing that in the constructor.
@@ -105,3 +97,10 @@ export class AuthenticatedUser {
     return `${this.firstName} ${this.lastName}`;
   }
 }
+
+export const LoginRequestSchema = v.object({
+  username: v.pipe(v.string(), v.minLength(3, "username must be at least 3 characters long"), v.maxLength(50, "username must be less than 50 characters long")),
+  password: v.pipe(v.string(), v.minLength(8, "password must be at least 8 characters long"), v.maxLength(50, "password must be less than 50 characters long")),
+});
+
+export type LoginRequest = v.InferOutput<typeof LoginRequestSchema>;

@@ -18,19 +18,20 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useAuthStore } from "@/features/auth/authStore";
+import { useAuthStore } from "@/features/auth/stores/authStore";
 import { AuthenticatedUser } from "@/features/auth/types";
 import { ROLES } from "@/features/roles/types";
 import { toast } from "sonner";
 import { ModeToggle } from "./mode-toggle";
+import { Link, useLocation } from "react-router-dom";
 
 type Icon = typeof Home;
 
 interface IMenuItem {
-  title: string,
-  url: string,
-  icon: Icon,
-  canAccess: (user: AuthenticatedUser | null) => boolean,
+  title: string;
+  url: string;
+  icon: Icon;
+  canAccess: (user: AuthenticatedUser | null) => boolean;
 }
 
 // Menu items.
@@ -61,6 +62,7 @@ type AppSidebarProps = {
 };
 
 export default function AppSidebar({ variant }: AppSidebarProps) {
+  const { pathname } = useLocation();
   const logout = useAuthStore((state) => state.logout);
   const user = useAuthStore((state) => state.user);
 
@@ -85,18 +87,30 @@ export default function AppSidebar({ variant }: AppSidebarProps) {
           <ModeToggle />
           <SidebarGroupContent>
             <SidebarMenu>
-              {items.map((item) =>
-                item.canAccess(user) ? (
+              {items.map((item) => {
+                // 1. Determine if the link is active
+                const isActive =
+                  // Handle the root path separately
+                  item.url === "/"
+                    ? pathname === item.url
+                    : // For other paths, check if the pathname starts with the item's URL
+                      pathname.startsWith(item.url);
+
+                return item.canAccess(user) ? (
                   <SidebarMenuItem key={item.title}>
-                    <SidebarMenuButton asChild>
-                      <a href={item.url}>
+                    <SidebarMenuButton
+                      asChild
+                      // 2. Apply the class based on the 'isActive' boolean
+                      className={isActive ? "bg-accent" : ""}
+                    >
+                      <Link to={item.url}>
                         <item.icon />
                         <span>{item.title}</span>
-                      </a>
+                      </Link>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
-                ) : null
-              )}
+                ) : null;
+              })}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
