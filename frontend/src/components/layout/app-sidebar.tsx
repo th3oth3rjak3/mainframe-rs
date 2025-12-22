@@ -1,4 +1,4 @@
-import { Book, ChevronUp, Home, User2 } from "lucide-react";
+import { Book, BookLock, ChevronUp, Home, User2 } from "lucide-react";
 
 import {
   Sidebar,
@@ -18,22 +18,38 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { ModeToggle } from "./mode-toggle";
 import { useAuthStore } from "@/features/auth/authStore";
+import { AuthenticatedUser } from "@/features/auth/types";
+import { ROLES } from "@/features/roles/types";
 import { toast } from "sonner";
-import { AuthenticatedUser, ROLES } from "@/features/auth/types";
+import { ModeToggle } from "./mode-toggle";
+
+type Icon = typeof Home;
+
+interface IMenuItem {
+  title: string,
+  url: string,
+  icon: Icon,
+  canAccess: (user: AuthenticatedUser | null) => boolean,
+}
 
 // Menu items.
-const items = [
+const items: IMenuItem[] = [
   {
     title: "Home",
-    url: "#",
+    url: "/",
     icon: Home,
     canAccess: (_: AuthenticatedUser | null) => true,
   },
   {
+    title: "Roles",
+    url: "/roles",
+    icon: BookLock,
+    canAccess: (user: AuthenticatedUser | null) => user !== null && user.isAdmin,
+  },
+  {
     title: "Recipes",
-    url: "#",
+    url: "/recipes",
     icon: Book,
     canAccess: (user: AuthenticatedUser | null) =>
       user !== null && (user.hasRole(ROLES.RecipeUser) || user.isAdmin),

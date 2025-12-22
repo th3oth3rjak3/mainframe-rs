@@ -1,4 +1,3 @@
-// src/token.rs
 use crate::errors::ApiError;
 use argon2::password_hash::rand_core::{OsRng, RngCore};
 use hmac::{Hmac, Mac};
