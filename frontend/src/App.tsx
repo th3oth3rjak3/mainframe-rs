@@ -9,6 +9,7 @@ import { useEffect } from "react";
 import SignUp from "./pages/sign-up";
 import ForgotPassword from "./pages/forgot-password";
 import { RequireAuth } from "./components/layout/require-auth";
+import RolesList from "./pages/roles/roles-list";
 
 function App() {
   const initialize = useAuthStore((state) => state.initialize);
@@ -34,6 +35,7 @@ function App() {
         <Route element={<RequireAuth />}>
           <Route element={<Layout />}>
             <Route path="/" element={<Dashboard />} />
+            <Route path="/roles" element={<RolesList />} />
           </Route>
         </Route>
       </Routes>

@@ -1,5 +1,5 @@
+import { ROLES, RoleSchema, type Role, type RoleName } from "@/features/roles/types";
 import * as v from "valibot";
-import { ROLES, RoleSchema, type Role, type RoleName } from "../roles/types";
 
 /**
  * User schema for validation at the API boundary matching the backend UserRead struct.
