@@ -29,6 +29,14 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown_menu";
 
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useMemo, useState } from "react";
@@ -37,7 +45,7 @@ import { Checkbox } from "./checkbox";
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
-  filterColumnName?: string;
+  filterable?: boolean;
   selectable?: boolean;
   showColumnSelector?: boolean;
 }
@@ -45,7 +53,7 @@ interface DataTableProps<TData, TValue> {
 export function DataTable<TData, TValue>({
   columns,
   data,
-  filterColumnName,
+  filterable,
   selectable,
   showColumnSelector,
 }: DataTableProps<TData, TValue>) {
@@ -53,6 +61,7 @@ export function DataTable<TData, TValue>({
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = useState({});
+  const [selectedFilterColumn, setSelectedFilterColumn] = useState<string>("");
 
   const updatedColumns = useMemo(() => {
     if (selectable === true) {
@@ -104,18 +113,66 @@ export function DataTable<TData, TValue>({
     },
   });
 
+  // Get filterable columns (those with an id and that can be filtered and are visible)
+  const filterableColumns = table
+    .getAllColumns()
+    .filter((column) => column.getCanFilter() && column.id !== "select" && column.getIsVisible())
+    .map((column) => ({
+      id: column.id,
+      label:
+        (column.columnDef.meta as any)?.label ||
+        (typeof column.columnDef.header === "string" ? column.columnDef.header : column.id),
+    }));
+
+  // Set initial filter column if filterable is enabled
+  useMemo(() => {
+    if (filterable && filterableColumns.length > 0) {
+      // If current selected column is hidden, switch to first visible one
+      const isCurrentColumnVisible = filterableColumns.some(
+        (col) => col.id === selectedFilterColumn
+      );
+      if (!selectedFilterColumn || !isCurrentColumnVisible) {
+        setSelectedFilterColumn(filterableColumns[0].id);
+      }
+    }
+  }, [filterable, filterableColumns, selectedFilterColumn]);
+
+  const selectedColumnLabel =
+    filterableColumns.find((col) => col.id === selectedFilterColumn)?.label || selectedFilterColumn;
+
   return (
     <div>
-      <div className="flex items-center py-4">
-        {filterColumnName ? (
-          <Input
-            placeholder={`Filter by ${filterColumnName}...`}
-            value={(table.getColumn(filterColumnName)?.getFilterValue() as string) ?? ""}
-            onChange={(event) =>
-              table.getColumn(filterColumnName)?.setFilterValue(event.target.value)
-            }
-            className="max-w-sm"
-          />
+      <div className="flex items-center gap-2 py-4">
+        {filterable ? (
+          <>
+            <Input
+              placeholder={`Filter by ${selectedColumnLabel}...`}
+              value={(table.getColumn(selectedFilterColumn)?.getFilterValue() as string) ?? ""}
+              onChange={(event) =>
+                table.getColumn(selectedFilterColumn)?.setFilterValue(event.target.value)
+              }
+              className="max-w-sm"
+            />
+            <Select
+              value={selectedFilterColumn}
+              onValueChange={(value) => {
+                setSelectedFilterColumn(value);
+                // Clear the filter when switching columns
+                table.getColumn(selectedFilterColumn)?.setFilterValue("");
+              }}
+            >
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Select column" />
+              </SelectTrigger>
+              <SelectContent>
+                {filterableColumns.map((column) => (
+                  <SelectItem key={column.id} value={column.id}>
+                    {column.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </>
         ) : null}
         {showColumnSelector ? (
           <DropdownMenu>
@@ -129,6 +186,12 @@ export function DataTable<TData, TValue>({
                 .getAllColumns()
                 .filter((column) => column.getCanHide())
                 .map((column) => {
+                  const label =
+                    (column.columnDef.meta as any)?.label ||
+                    (typeof column.columnDef.header === "string"
+                      ? column.columnDef.header
+                      : column.id);
+
                   return (
                     <DropdownMenuCheckboxItem
                       key={column.id}
@@ -136,7 +199,7 @@ export function DataTable<TData, TValue>({
                       checked={column.getIsVisible()}
                       onCheckedChange={(value) => column.toggleVisibility(!!value)}
                     >
-                      {column.id}
+                      {label}
                     </DropdownMenuCheckboxItem>
                   );
                 })}

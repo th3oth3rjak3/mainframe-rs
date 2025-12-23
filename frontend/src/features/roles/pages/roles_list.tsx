@@ -10,9 +10,13 @@ const columns: ColumnDef<Role>[] = [
   {
     accessorFn: (item) => item.id,
     header: "Id",
+    enableColumnFilter: false,
   },
   {
     accessorKey: "name",
+    meta: {
+      label: "Name",
+    },
     header: ({ column }) => {
       return (
         <Button
@@ -35,13 +39,5 @@ export default function RolesList() {
     initializeRoleStore();
   }, [initializeRoleStore]);
 
-  return (
-    <DataTable
-      columns={columns}
-      data={roles}
-      filterColumnName="name"
-      showColumnSelector
-      selectable
-    />
-  );
+  return <DataTable columns={columns} data={roles} showColumnSelector filterable />;
 }
