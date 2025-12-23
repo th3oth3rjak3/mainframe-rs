@@ -29,6 +29,7 @@ impl Session {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
+#[serde(rename_all = "camelCase")]
 pub struct SessionSummary {
     pub user: UserBaseResponse,
     pub active_sessions: i64,
