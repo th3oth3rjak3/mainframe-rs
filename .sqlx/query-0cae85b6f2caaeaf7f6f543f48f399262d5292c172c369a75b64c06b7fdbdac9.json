@@ -1,0 +1,20 @@
+{
+  "db_name": "SQLite",
+  "query": "\n            SELECT COUNT(*) FROM recipes\n            WHERE (user_id = ? OR is_public = true)\n            AND name LIKE COALESCE('%' || ? || '%', '%')\n            ",
+  "describe": {
+    "columns": [
+      {
+        "name": "COUNT(*)",
+        "ordinal": 0,
+        "type_info": "Integer"
+      }
+    ],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "0cae85b6f2caaeaf7f6f543f48f399262d5292c172c369a75b64c06b7fdbdac9"
+}
