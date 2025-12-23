@@ -82,10 +82,10 @@ impl IRecipeRepository for SqlxRecipeRepository {
         }
 
         let offset = Wrapping(page - 1) * Wrapping(page_size);
-        if offset.0 < 0 || offset.0 > i64::MAX {
+        if offset.0 < 0 {
             return Err(RepositoryError::ArgumentOutOfRange {
                 field: "offset",
-                value: format!("page={}; page_size={}", page, page_size),
+                value: format!("page={page}; page_size={page_size}"),
             });
         }
         let offset = offset.0;
