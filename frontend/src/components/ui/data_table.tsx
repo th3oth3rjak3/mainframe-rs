@@ -92,7 +92,7 @@ export function DataTable<TData, TValue>({
     }
 
     return columns;
-  }, [columns]);
+  }, [columns, selectable]);
 
   const table = useReactTable({
     data,
@@ -120,7 +120,7 @@ export function DataTable<TData, TValue>({
     .map((column) => ({
       id: column.id,
       label:
-        (column.columnDef.meta as any)?.label ||
+        (column.columnDef.meta as { label: string })?.label ||
         (typeof column.columnDef.header === "string" ? column.columnDef.header : column.id),
     }));
 

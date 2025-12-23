@@ -39,7 +39,6 @@ const columns: ColumnDef<SessionSummary>[] = [
     header: "Last Login",
     enableColumnFilter: false,
     cell: ({ row }) => {
-      row.id;
       const loginDate = row.getValue("lastLogin") as Date | null;
       return loginDate?.toLocaleString();
     },
