@@ -17,6 +17,7 @@ function App() {
   const RolesList = lazy(() => import("@/features/roles/pages/roles_list"));
   const UsersList = lazy(() => import("@/features/users/pages/users_list"));
   const RecipesList = lazy(() => import("@/features/recipes/pages/recipes_list"));
+  const SessionsList = lazy(() => import("@/features/sessions/pages/sessions_list"));
 
   useEffect(() => {
     initialize();
@@ -54,6 +55,10 @@ function App() {
               {/* Recipes */}
               <Route path="/recipes">
                 <Route path="" element={<RecipesList />} />
+              </Route>
+
+              <Route path="/sessions">
+                <Route path="" element={<SessionsList />} />
               </Route>
             </Route>
           </Route>

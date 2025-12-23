@@ -1,4 +1,4 @@
-import { Book, BookLock, ChevronUp, Home, User, User2 } from "lucide-react";
+import { Book, BookLock, ChevronUp, Clock, Cookie, Home, User, User2 } from "lucide-react";
 
 import {
   Sidebar,
@@ -53,6 +53,12 @@ const items: IMenuItem[] = [
     title: "Roles",
     url: "/roles",
     icon: BookLock,
+    canAccess: (user: AuthenticatedUser | null) => user !== null && user.isAdmin,
+  },
+  {
+    title: "Sessions",
+    url: "/sessions",
+    icon: Cookie,
     canAccess: (user: AuthenticatedUser | null) => user !== null && user.isAdmin,
   },
   {
