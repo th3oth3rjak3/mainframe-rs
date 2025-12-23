@@ -79,11 +79,11 @@ impl From<ServiceError> for ApiError {
                 } => Self::NotFound {
                     entity,
                     property,
-                    value: value.to_string(),
+                    value,
                 },
                 RepositoryError::Database(e) => Self::Internal(e.into()),
                 RepositoryError::ArgumentOutOfRange { .. } => {
-                    Self::BadRequest(format!("bad request: {}", repo_err.to_string()))
+                    Self::BadRequest(format!("bad request: {repo_err}"))
                 }
             },
             ServiceError::NotFound {
@@ -196,7 +196,7 @@ pub enum ServiceError {
 /// of data persistence, such as database connection issues or missing records.
 #[derive(Debug, Error)]
 pub enum RepositoryError {
-    /// Low‑level SQLx errors (connection failures, constraint violations, …).
+    /// Low‑level `SQLx` errors (connection failures, constraint violations, …).
     #[error("database error: {0}")]
     Database(#[from] sqlx::Error),
 
