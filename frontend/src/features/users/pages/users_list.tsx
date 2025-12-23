@@ -4,6 +4,7 @@ import type { UserBase } from "../types";
 import { toast } from "sonner";
 import type { ColumnDef } from "@tanstack/react-table";
 import { DataTable } from "@/components/ui/data_table";
+import { ValiError } from "valibot";
 
 const columns: ColumnDef<UserBase>[] = [
   {
@@ -46,7 +47,13 @@ export default function UsersList() {
     getAllUsers()
       .then((u) => setUsers(u))
       .catch((err) => {
-        toast.error(JSON.stringify(err));
+        if (err instanceof ValiError) {
+          toast.error("User data was in the wrong format");
+        } else if (err instanceof Error) {
+          toast.error(err.message);
+        } else {
+          toast.error("Error getting users");
+        }
         console.error(err);
       });
   }, [getAllUsers]);
