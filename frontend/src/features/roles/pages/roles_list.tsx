@@ -9,7 +9,7 @@ import { ArrowUpDown } from "lucide-react";
 const columns: ColumnDef<Role>[] = [
   {
     accessorFn: (item) => item.id,
-    header: "ID",
+    header: "Id",
   },
   {
     accessorKey: "name",
@@ -35,5 +35,13 @@ export default function RolesList() {
     initializeRoleStore();
   }, [initializeRoleStore]);
 
-  return <DataTable columns={columns} data={roles} filterColumnName="name" />;
+  return (
+    <DataTable
+      columns={columns}
+      data={roles}
+      filterColumnName="name"
+      showColumnSelector
+      selectable
+    />
+  );
 }
