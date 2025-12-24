@@ -138,13 +138,20 @@ The goal is to make private deployment straightforward without requiring complex
 ### Backend
 
 - [x] Basic HTTP server
-- [x] Cookie-based authentication (early)
-- [ ] Database schema design
+- [x] Cookie-based authentication
+- [x] Database schema design
 
 ### Frontend
 
-- [x] Landing page scaffold
+- [ ] Landing page scaffold
 - [ ] Basic routing for apps
+
+### Account Management
+
+- [ ] Create/Edit Users
+- [ ] Reset Passwords
+- [ ] Disable Users
+- [ ] Edit profile/reset own password
 
 ### Recipe Application
 

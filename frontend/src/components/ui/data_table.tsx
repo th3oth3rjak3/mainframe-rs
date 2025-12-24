@@ -147,7 +147,11 @@ export function DataTable<TData, TValue>({
           <>
             <Input
               placeholder={`Filter by ${selectedColumnLabel}...`}
-              value={(table.getColumn(selectedFilterColumn)?.getFilterValue() as string) ?? ""}
+              value={
+                selectedFilterColumn === ""
+                  ? ""
+                  : (table.getColumn(selectedFilterColumn)?.getFilterValue() as string)
+              }
               onChange={(event) =>
                 table.getColumn(selectedFilterColumn)?.setFilterValue(event.target.value)
               }
@@ -184,7 +188,7 @@ export function DataTable<TData, TValue>({
             <DropdownMenuContent align="end">
               {table
                 .getAllColumns()
-                .filter((column) => column.getCanHide())
+                .filter((column) => column.getCanHide() && column.id !== "")
                 .map((column) => {
                   const label =
                     (column.columnDef.meta as any)?.label ||
