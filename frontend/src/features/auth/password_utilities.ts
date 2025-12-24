@@ -1,4 +1,4 @@
-export const ALLOWED_SPECIALS = "!@#$%^&*()_+-=[]{}|;:'\",.<>?/";
+export const ALLOWED_SPECIALS = "!@#$%^&*()_+-=[]{}";
 
 export const generateRandomPassword = (length: number = 12): string => {
   if (length < 8) {
@@ -10,7 +10,11 @@ export const generateRandomPassword = (length: number = 12): string => {
   const digits = "0123456789";
   const specials = ALLOWED_SPECIALS;
 
-  const getRandomChar = (charset: string) => charset[Math.floor(Math.random() * charset.length)];
+  const getRandomChar = (charset: string) => {
+    const randomValues = new Uint32Array(1);
+    crypto.getRandomValues(randomValues);
+    return charset[randomValues[0] % charset.length];
+  };
 
   // Guarantee minimums
   const required = [
@@ -34,7 +38,9 @@ export const generateRandomPassword = (length: number = 12): string => {
 
   // Shuffle the array using Fisher-Yates algorithm
   for (let i = required.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
+    const randomValues = new Uint32Array(1);
+    crypto.getRandomValues(randomValues);
+    const j = randomValues[0] % (i + 1);
     [required[i], required[j]] = [required[j], required[i]];
   }
 
