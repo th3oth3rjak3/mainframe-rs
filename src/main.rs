@@ -13,6 +13,7 @@ mod sessions;
 mod shared_models;
 mod token;
 mod users;
+mod validation;
 
 use authentication::router as auth_router;
 use axum::Router;

@@ -46,6 +46,7 @@ utoipa = { version = "5.4.0", features = [
 ] }
 utoipa-scalar = { version = "0.3.0", features = ["axum"] }
 uuid = { version = "1.19.0", features = ["serde", "v7"] }
+validator = { version = "0.20.0", features = ["derive"] }
 
 
 [lints.clippy]

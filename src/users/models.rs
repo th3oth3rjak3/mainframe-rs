@@ -9,6 +9,7 @@ use std::fmt::Display;
 use time::OffsetDateTime;
 use utoipa::ToSchema;
 use uuid::Uuid;
+use validator::Validate;
 
 use crate::roles::{Role, RoleName};
 
@@ -107,24 +108,33 @@ impl From<UserBase> for User {
     }
 }
 
-#[derive(Debug, Clone, Deserialize, Serialize, ToSchema)]
+#[derive(Debug, Clone, Deserialize, Serialize, ToSchema, Validate)]
 #[serde(rename_all = "camelCase")]
 pub struct CreateUserRequest {
+    #[validate(length(min = 1, max = 50))]
     pub first_name: String,
+    #[validate(length(min = 1, max = 50))]
     pub last_name: String,
+    #[validate(email)]
     pub email: String,
+    #[validate(length(min = 1, max = 50))]
     pub username: String,
+    #[validate(custom(function = crate::validation::password_complexity))]
     pub raw_password: String,
     #[serde(with = "time::serde::rfc3339")]
     pub password_expiration: OffsetDateTime,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
+#[derive(Debug, Clone, Serialize, Deserialize, ToSchema, Validate)]
 #[serde(rename_all = "camelCase")]
 pub struct UpdateUserRequest {
+    #[validate(length(min = 1, max = 50))]
     pub first_name: String,
+    #[validate(length(min = 1, max = 50))]
     pub last_name: String,
+    #[validate(email)]
     pub email: String,
+    #[validate(length(min = 1, max = 50))]
     pub username: String,
 }
 
@@ -217,10 +227,13 @@ impl TryFrom<CreateUserRequest> for User {
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
+#[derive(Debug, Clone, Serialize, Deserialize, ToSchema, Validate)]
 #[serde(rename_all = "camelCase")]
 pub struct UpdatePasswordRequest {
+    #[validate(custom(function = crate::validation::password_complexity))]
     pub raw_password: String,
+    #[serde(with = "time::serde::rfc3339::option")]
+    pub password_expiration: Option<OffsetDateTime>,
 }
 
 #[cfg(test)]
@@ -264,5 +277,137 @@ mod tests {
 
         println!("Admin password hash: {password_hash}");
         // Copy this hash to your migration
+    }
+
+    use super::*;
+    use time::OffsetDateTime;
+
+    fn valid_request() -> CreateUserRequest {
+        CreateUserRequest {
+            first_name: "John".to_string(),
+            last_name: "Doe".to_string(),
+            email: "john.doe@example.com".to_string(),
+            username: "johndoe".to_string(),
+            raw_password: "MyPass123!@".to_string(),
+            password_expiration: OffsetDateTime::now_utc(),
+        }
+    }
+
+    #[test]
+    fn test_valid_create_user_request() {
+        let request = valid_request();
+        assert!(request.validate().is_ok());
+    }
+
+    #[test]
+    fn test_first_name_too_short() {
+        let mut request = valid_request();
+        request.first_name = "".to_string();
+        assert!(request.validate().is_err());
+    }
+
+    #[test]
+    fn test_first_name_too_long() {
+        let mut request = valid_request();
+        request.first_name = "a".repeat(51);
+        assert!(request.validate().is_err());
+    }
+
+    #[test]
+    fn test_last_name_too_short() {
+        let mut request = valid_request();
+        request.last_name = "".to_string();
+        assert!(request.validate().is_err());
+    }
+
+    #[test]
+    fn test_last_name_too_long() {
+        let mut request = valid_request();
+        request.last_name = "a".repeat(51);
+        assert!(request.validate().is_err());
+    }
+
+    #[test]
+    fn test_invalid_email() {
+        let mut request = valid_request();
+        request.email = "not-an-email".to_string();
+        assert!(request.validate().is_err());
+    }
+
+    #[test]
+    fn test_username_too_short() {
+        let mut request = valid_request();
+        request.username = "".to_string();
+        assert!(request.validate().is_err());
+    }
+
+    #[test]
+    fn test_username_too_long() {
+        let mut request = valid_request();
+        request.username = "a".repeat(51);
+        assert!(request.validate().is_err());
+    }
+
+    #[test]
+    fn test_password_missing_uppercase() {
+        let mut request = valid_request();
+        request.raw_password = "mypass123!@".to_string();
+        assert!(request.validate().is_err());
+    }
+
+    #[test]
+    fn test_password_missing_lowercase() {
+        let mut request = valid_request();
+        request.raw_password = "MYPASS123!@".to_string();
+        assert!(request.validate().is_err());
+    }
+
+    #[test]
+    fn test_password_missing_digits() {
+        let mut request = valid_request();
+        request.raw_password = "MyPassword!@".to_string();
+        assert!(request.validate().is_err());
+    }
+
+    #[test]
+    fn test_password_missing_special() {
+        let mut request = valid_request();
+        request.raw_password = "MyPassword123".to_string();
+        assert!(request.validate().is_err());
+    }
+
+    #[test]
+    fn test_password_only_one_uppercase() {
+        let mut request = valid_request();
+        request.raw_password = "Mypass123!@".to_string();
+        assert!(request.validate().is_err());
+    }
+
+    #[test]
+    fn test_password_only_one_lowercase() {
+        let mut request = valid_request();
+        request.raw_password = "MYPASs123!@".to_string();
+        assert!(request.validate().is_err());
+    }
+
+    #[test]
+    fn test_password_only_one_digit() {
+        let mut request = valid_request();
+        request.raw_password = "MyPassword1!@".to_string();
+        assert!(request.validate().is_err());
+    }
+
+    #[test]
+    fn test_password_only_one_special() {
+        let mut request = valid_request();
+        request.raw_password = "MyPassword123!".to_string();
+        assert!(request.validate().is_err());
+    }
+
+    #[test]
+    fn test_password_with_minimum_requirements() {
+        let mut request = valid_request();
+        request.raw_password = "AAaa11!!".to_string();
+        assert!(request.validate().is_ok());
     }
 }

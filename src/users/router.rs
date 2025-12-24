@@ -11,7 +11,7 @@ use uuid::Uuid;
 
 use crate::{
     errors::ApiError,
-    extractors::{AdminUser, authenticated_user::AuthenticatedUser},
+    extractors::{AdminUser, ValidatedJson, authenticated_user::AuthenticatedUser},
     services::ServiceContainer,
     users::{
         CreateUserRequest, UpdatePasswordRequest, UpdateUserRequest, UserBaseResponse, UserResponse,
@@ -120,7 +120,7 @@ pub async fn get_by_id(
 pub async fn create_user(
     _: AdminUser,
     State(container): State<ServiceContainer>,
-    Json(req): Json<CreateUserRequest>,
+    ValidatedJson(req): ValidatedJson<CreateUserRequest>,
 ) -> Result<impl IntoResponse, ApiError> {
     let user_id = container.user_service().create(req).await?;
     let location_str = format!("/users/{user_id}");
@@ -155,7 +155,7 @@ pub async fn update_user(
     _: AdminUser,
     Path(id): Path<Uuid>,
     State(container): State<ServiceContainer>,
-    Json(req): Json<UpdateUserRequest>,
+    ValidatedJson(req): ValidatedJson<UpdateUserRequest>,
 ) -> Result<impl IntoResponse, ApiError> {
     container.user_service().update(id, req).await?;
     Ok(StatusCode::NO_CONTENT)
@@ -183,7 +183,7 @@ pub async fn update_password_for_user(
     _: AdminUser,
     Path(id): Path<Uuid>,
     State(container): State<ServiceContainer>,
-    Json(req): Json<UpdatePasswordRequest>,
+    ValidatedJson(req): ValidatedJson<UpdatePasswordRequest>,
 ) -> Result<impl IntoResponse, ApiError> {
     container
         .user_service()
@@ -211,7 +211,7 @@ pub async fn update_password_for_user(
 pub async fn update_self(
     auth: AuthenticatedUser,
     State(container): State<ServiceContainer>,
-    Json(req): Json<UpdateUserRequest>,
+    ValidatedJson(req): ValidatedJson<UpdateUserRequest>,
 ) -> Result<impl IntoResponse, ApiError> {
     container.user_service().update(auth.user.id, req).await?;
     Ok(StatusCode::NO_CONTENT)
@@ -236,7 +236,7 @@ pub async fn update_self(
 pub async fn update_own_password(
     auth: AuthenticatedUser,
     State(container): State<ServiceContainer>,
-    Json(req): Json<UpdatePasswordRequest>,
+    ValidatedJson(req): ValidatedJson<UpdatePasswordRequest>,
 ) -> Result<impl IntoResponse, ApiError> {
     container
         .user_service()
