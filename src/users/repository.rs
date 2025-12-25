@@ -172,8 +172,9 @@ impl IUserRepository for SqlxUserRepository {
 
     async fn update_password(&self, user: &UserBase) -> Result<(), RepositoryError> {
         sqlx::query!(
-            "UPDATE users SET password_hash = ? WHERE id = ?",
+            "UPDATE users SET password_hash = ?, password_expiration = ? WHERE id = ?",
             user.password_hash,
+            user.password_expiration,
             user.id
         )
         .execute(&self.pool)
