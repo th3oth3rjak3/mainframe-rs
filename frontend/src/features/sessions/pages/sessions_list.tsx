@@ -1,11 +1,10 @@
 import { useSessionStore } from "@/features/sessions/stores/session_store";
 import { useEffect, useState } from "react";
 import type { SessionSummary } from "../types";
-import * as z from "zod";
-import { toast } from "sonner";
 import { DataTable } from "@/components/ui/data_table";
 import type { ColumnDef } from "@tanstack/react-table";
 import { PageHeader } from "@/components/ui/page_header";
+import { toastErrorHandler } from "@/lib/error_handler";
 
 const columns: ColumnDef<SessionSummary>[] = [
   {
@@ -58,16 +57,7 @@ export default function SessionsList() {
   useEffect(() => {
     getSessionSummaries()
       .then((summaries) => setSessions(summaries))
-      .catch((err) => {
-        if (err instanceof z.ZodError) {
-          toast.error(z.prettifyError(err));
-        } else if (err instanceof Error) {
-          toast.error(err.message);
-        } else {
-          toast.error("Error getting session summaries");
-        }
-        console.error(err);
-      });
+      .catch((err) => toastErrorHandler(err, "failed to get sessions"));
   }, [getSessionSummaries]);
 
   return (

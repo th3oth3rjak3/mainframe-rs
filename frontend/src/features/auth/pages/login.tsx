@@ -19,6 +19,7 @@ import { toast } from "sonner";
 
 import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { HTTPError } from "ky";
+import { toastErrorHandler } from "@/lib/error_handler";
 
 export default function Login() {
   const login = useAuthStore((state) => state.login);
@@ -46,11 +47,9 @@ export default function Login() {
           toast.error("invalid username or password");
           return;
         }
-        toast.error(err.message);
-      } else if (err instanceof Error) {
-        toast.error(err.message);
+        toastErrorHandler(err);
       } else {
-        toast.error("unexpected login error");
+        toastErrorHandler(err, "unexpected login error");
       }
     } finally {
       setIsLoading(false);

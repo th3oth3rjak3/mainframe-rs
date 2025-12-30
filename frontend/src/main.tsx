@@ -1,8 +1,11 @@
-import { StrictMode } from "react";
+import { lazy, StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import "@/index.css";
-import App from "@/app";
-import { BrowserRouter } from "react-router-dom";
+
+const App = lazy(() => import("@/app"));
+const BrowserRouter = lazy(() =>
+  import("react-router-dom").then((module) => ({ default: module.BrowserRouter }))
+);
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>

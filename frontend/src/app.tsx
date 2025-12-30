@@ -1,72 +1,76 @@
 import { Route, Routes } from "react-router-dom";
-import { Toaster } from "sonner";
+import { toast, Toaster } from "sonner";
 import { useAuthStore } from "@/features/auth/stores/auth_store";
-import { lazy, Suspense, useEffect } from "react";
+import { Suspense, useEffect, useRef } from "react";
+import * as Pages from "@/routes";
 
 function App() {
   const initialize = useAuthStore((state) => state.initialize);
+  const isLoggedIn = useAuthStore((state) => state.isLoggedIn);
   const isLoading = useAuthStore((state) => state.isInitializing);
-
-  const ThemeProvider = lazy(() => import("@/components/providers/theme_provider"));
-  const Layout = lazy(() => import("@/components/layout/layout"));
-  const RequireAuth = lazy(() => import("@/components/layout/require_auth"));
-  const Login = lazy(() => import("@/features/auth/pages/login"));
-  const SignUp = lazy(() => import("@/features/auth/pages/sign_up"));
-  const ForgotPassword = lazy(() => import("@/features/auth/pages/forgot_password"));
-  const Dashboard = lazy(() => import("@/pages/dashboard"));
-  const RolesList = lazy(() => import("@/features/roles/pages/roles_list"));
-  const UsersList = lazy(() => import("@/features/users/pages/users_list"));
-  const CreateUser = lazy(() => import("@/features/users/pages/create_user"));
-  const RecipesList = lazy(() => import("@/features/recipes/pages/recipes_list"));
-  const SessionsList = lazy(() => import("@/features/sessions/pages/sessions_list"));
+  const wasLoggedIn = useRef(isLoggedIn);
 
   useEffect(() => {
     initialize();
   }, [initialize]);
+
+  useEffect(() => {
+    // Check if the user was just logged out
+    if (wasLoggedIn.current && !isLoggedIn) {
+      // ITS ONLY JOB: Show a toast to explain what happened.
+      toast.error("Your session has expired.", {
+        description: "Please log in again to continue.",
+      });
+    }
+
+    // Update the ref for the next render
+    wasLoggedIn.current = isLoggedIn;
+  }, [isLoggedIn]);
 
   if (isLoading) {
     return <></>;
   }
 
   return (
-    <ThemeProvider defaultTheme="system" storageKey="vite-ui-theme">
+    <Pages.ThemeProvider defaultTheme="system" storageKey="vite-ui-theme">
       <Toaster richColors />
       <Suspense>
         <Routes>
           {/* Unprotected Routes */}
-          <Route path="/login" element={<Login />} />
-          <Route path="/sign-up" element={<SignUp />} />
-          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/login" element={<Pages.Login />} />
+          <Route path="/sign-up" element={<Pages.SignUp />} />
+          <Route path="/forgot-password" element={<Pages.ForgotPassword />} />
 
           {/* Authenticated Routes */}
-          <Route element={<RequireAuth />}>
-            <Route element={<Layout />}>
-              <Route path="/" element={<Dashboard />} />
+          <Route element={<Pages.RequireAuth />}>
+            <Route element={<Pages.Layout />}>
+              <Route path="/" element={<Pages.Dashboard />} />
 
               {/* Roles */}
               <Route path="/roles">
-                <Route path="" element={<RolesList />} />
+                <Route path="" element={<Pages.RolesList />} />
               </Route>
 
               {/* Users */}
               <Route path="/users">
-                <Route path="" element={<UsersList />} />
-                <Route path="create" element={<CreateUser />} />
+                <Route path="" element={<Pages.UsersList />} />
+                <Route path="create" element={<Pages.CreateUser />} />
               </Route>
 
               {/* Recipes */}
               <Route path="/recipes">
-                <Route path="" element={<RecipesList />} />
+                <Route path="" element={<Pages.RecipesList />} />
               </Route>
 
+              {/* Sessions */}
               <Route path="/sessions">
-                <Route path="" element={<SessionsList />} />
+                <Route path="" element={<Pages.SessionsList />} />
               </Route>
             </Route>
           </Route>
         </Routes>
       </Suspense>
-    </ThemeProvider>
+    </Pages.ThemeProvider>
   );
 }
 

@@ -3,8 +3,6 @@ import { Controller, useForm } from "react-hook-form";
 import { CreateUserRequestSchema, type CreateUserRequest } from "../types";
 import dayjs from "dayjs";
 import { useUserStore } from "../stores/user_store";
-import { toast } from "sonner";
-import { HTTPError } from "ky";
 import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { useEffect, useState } from "react";
@@ -18,6 +16,7 @@ import { ArrowUpDown, RefreshCw } from "lucide-react";
 import { NewUserEmailTemplate } from "@/features/users/components/new_user_email_template";
 import { generateRandomPassword } from "@/features/auth/password_utilities";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { toastErrorHandler } from "@/lib/error_handler";
 
 const columns: ColumnDef<Role>[] = [
   {
@@ -78,13 +77,7 @@ export default function CreateUser() {
       await createUser(request);
       setValidatedUser(request);
     } catch (err) {
-      if (err instanceof HTTPError) {
-        toast.error(err.message);
-      } else if (err instanceof Error) {
-        toast.error(err.message);
-      } else {
-        toast.error("unexpected login error");
-      }
+      toastErrorHandler(err);
       setValidatedUser(null);
     } finally {
       setIsLoading(false);

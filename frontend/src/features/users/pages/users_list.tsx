@@ -1,14 +1,13 @@
 import { useEffect, useState } from "react";
 import { useUserStore } from "../stores/user_store";
 import type { UserBase } from "../types";
-import { toast } from "sonner";
 import type { ColumnDef } from "@tanstack/react-table";
 import { DataTable } from "@/components/ui/data_table";
-import z, { ZodError } from "zod";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { PlusCircle } from "lucide-react";
 import { PageHeader } from "@/components/ui/page_header";
+import { toastErrorHandler } from "@/lib/error_handler";
 
 const columns: ColumnDef<UserBase>[] = [
   {
@@ -51,16 +50,7 @@ export default function UsersList() {
   useEffect(() => {
     getAllUsers()
       .then((u) => setUsers(u))
-      .catch((err) => {
-        if (err instanceof ZodError) {
-          toast.error(z.prettifyError(err));
-        } else if (err instanceof Error) {
-          toast.error(err.message);
-        } else {
-          toast.error("Error getting users");
-        }
-        console.error(err);
-      });
+      .catch((err) => toastErrorHandler(err, "Error getting users"));
   }, [getAllUsers]);
 
   return (

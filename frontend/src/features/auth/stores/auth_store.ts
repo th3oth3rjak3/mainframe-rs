@@ -21,6 +21,13 @@ type AuthStore = {
   logout: () => Promise<void>;
 
   /**
+   * Removes a user from the state. This is only to be used when
+   * a backend call results in a 401 indicating that the user is not
+   * logged in.
+   */
+  clearUser: () => Promise<void>;
+
+  /**
    * Check if a user is authenticated on mount
    */
   initialize: () => Promise<void>;
@@ -47,8 +54,12 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
   },
 
   logout: async () => {
-    await httpClient.post("auth/logout");
-    set({ user: null, isLoggedIn: false });
+      await httpClient.post("auth/logout");
+      set({ user: null, isLoggedIn: false });
+  },
+
+  clearUser: async () => {
+      set({ user: null, isLoggedIn: false });
   },
 
   initialize: async () => {

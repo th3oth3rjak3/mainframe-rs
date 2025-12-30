@@ -1,5 +1,6 @@
 import ky from "ky";
 import * as z from "zod";
+import { useAuthStore } from "@/features/auth/stores/auth_store";
 
 /**
  * Error response schema matching the backend ErrorResponse struct
@@ -40,6 +41,13 @@ export const httpClient = ky.create({
 
         return error;
       },
+    ],
+    afterResponse: [
+      async (_, _options, response) => {
+        if (response.status === 401) {
+          useAuthStore.getState().clearUser();
+        }
+      }
     ],
   },
 });
