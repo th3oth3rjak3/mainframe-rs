@@ -5,7 +5,7 @@ import {
   type ThemeProviderProps,
 } from "./theme_provider_functions";
 
-export function ThemeProvider({
+export default function ThemeProvider({
   children,
   defaultTheme = "system",
   storageKey = "vite-ui-theme",
