@@ -1,18 +1,18 @@
-import { ThemeProvider } from "@/components/providers/theme_provider";
 import { Route, Routes } from "react-router-dom";
-import Layout from "@/components/layout/layout";
 import { Toaster } from "sonner";
-import Login from "@/features/auth/pages/login";
 import { useAuthStore } from "@/features/auth/stores/auth_store";
 import { lazy, Suspense, useEffect } from "react";
-import SignUp from "./features/auth/pages/sign_up";
-import ForgotPassword from "./features/auth/pages/forgot_password";
-import { RequireAuth } from "./components/layout/require_auth";
 
 function App() {
   const initialize = useAuthStore((state) => state.initialize);
   const isLoading = useAuthStore((state) => state.isInitializing);
 
+  const ThemeProvider = lazy(() => import("@/components/providers/theme_provider"));
+  const Layout = lazy(() => import("@/components/layout/layout"));
+  const RequireAuth = lazy(() => import("@/components/layout/require_auth"));
+  const Login = lazy(() => import("@/features/auth/pages/login"));
+  const SignUp = lazy(() => import("@/features/auth/pages/sign_up"));
+  const ForgotPassword = lazy(() => import("@/features/auth/pages/forgot_password"));
   const Dashboard = lazy(() => import("@/pages/dashboard"));
   const RolesList = lazy(() => import("@/features/roles/pages/roles_list"));
   const UsersList = lazy(() => import("@/features/users/pages/users_list"));
