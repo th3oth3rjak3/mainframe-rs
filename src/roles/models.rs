@@ -1,17 +1,18 @@
 use std::fmt::Display;
 
 use serde::{Deserialize, Serialize};
+use sqlx::prelude::FromRow;
 use utoipa::ToSchema;
 use uuid::Uuid;
 
-#[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
+#[derive(Debug, Clone, Serialize, Deserialize, ToSchema, FromRow)]
 pub struct Role {
     pub id: Uuid,
     pub name: RoleName,
 }
 
 #[derive(Debug, Clone, Copy, Eq, PartialEq, sqlx::Type, Serialize, Deserialize, ToSchema)]
-#[serde(from = "String", into = "String")]
+#[serde(into = "String", from = "String")]
 pub enum RoleName {
     Administrator,
     RecipeUser,
@@ -34,7 +35,7 @@ impl From<String> for RoleName {
     fn from(value: String) -> Self {
         match value.as_str() {
             "Administrator" => Self::Administrator,
-            "Recipe User" => Self::RecipeUser,
+            "RecipeUser" => Self::RecipeUser,
             _ => Self::Unknown,
         }
     }

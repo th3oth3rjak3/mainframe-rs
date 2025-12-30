@@ -14,7 +14,6 @@ export const useUserStore = create<UserStore>(() => ({
     return z.parse(z.array(UserBaseSchema), response);
   },
   createUser: async (request: CreateUserRequest) => {
-    const { confirmPassword, ...rest } = request;
-    await httpClient.post("users", { json: rest });
+    await httpClient.post("users", { json: request });
   },
 }));

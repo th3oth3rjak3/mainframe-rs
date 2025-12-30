@@ -62,6 +62,10 @@ interface DataTableProps<TData, TValue> {
   showColumnSelector?: boolean;
 }
 
+interface ColumnMetadata {
+  label?: string;
+}
+
 interface DataTableToolbarProps<TData> {
   table: TanstackTable<TData>;
   filterable?: boolean;
@@ -73,8 +77,6 @@ function DataTableToolbar<TData>({
   filterable,
   showColumnSelector,
 }: DataTableToolbarProps<TData>) {
-  const [selectedFilterColumn, setSelectedFilterColumn] = useState<string>("");
-
   const filterableColumns = useMemo(
     () =>
       table
@@ -89,11 +91,12 @@ function DataTableToolbar<TData>({
     [table]
   );
 
-  useEffect(() => {
-    if (filterable && filterableColumns.length > 0 && !selectedFilterColumn) {
-      setSelectedFilterColumn(filterableColumns[0].id);
+  const [selectedFilterColumn, setSelectedFilterColumn] = useState<string>(() => {
+    if (filterable && filterableColumns.length > 0) {
+      return filterableColumns[0].id;
     }
-  }, [filterable, filterableColumns, selectedFilterColumn]);
+    return "";
+  });
 
   const selectedColumnLabel =
     filterableColumns.find((col) => col.id === selectedFilterColumn)?.label || selectedFilterColumn;
@@ -161,7 +164,7 @@ function DataTableToolbar<TData>({
                   checked={column.getIsVisible()}
                   onCheckedChange={(value) => column.toggleVisibility(!!value)}
                 >
-                  {(column.columnDef.meta as any)?.label ?? column.id}
+                  {(column.columnDef.meta as ColumnMetadata)?.label ?? column.id}
                 </DropdownMenuCheckboxItem>
               ))}
           </DropdownMenuContent>

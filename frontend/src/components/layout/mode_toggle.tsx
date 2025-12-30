@@ -5,7 +5,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown_menu";
-import { useTheme } from "@/components/providers/theme_provider";
+import { useTheme } from "@/components/providers/theme_provider_functions";
 import { SidebarGroupAction } from "@/components/ui/sidebar";
 
 export function ModeToggle() {

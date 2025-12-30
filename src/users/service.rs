@@ -67,7 +67,10 @@ impl IUserService for UserService {
     }
 
     async fn create(&self, request: CreateUserRequest) -> Result<Uuid, ServiceError> {
-        let new_user: User = request.try_into()?;
+        let role_ids = request.roles.clone();
+        let mut new_user: User = request.try_into()?;
+        let roles = self.role_repo.get_by_role_ids(role_ids).await?;
+        new_user.roles = roles;
         self.user_repo.create(&new_user).await?;
         Ok(new_user.id)
     }

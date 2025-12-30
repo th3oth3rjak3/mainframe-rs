@@ -11,6 +11,9 @@ type NewUserEmailTemplateProps = {
   newUser: CreateUserRequest;
 };
 
+const CopyIcon = ({ copied }: { copied: boolean }) =>
+  copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />;
+
 export function NewUserEmailTemplate({ newUser }: NewUserEmailTemplateProps) {
   const [templateCopied, setTemplateCopied] = useState(false);
   const [emailCopied, setEmailCopied] = useState(false);
@@ -39,9 +42,6 @@ The Mainframe Team`;
     setEmailCopied(true);
     setTimeout(() => setEmailCopied(false), 2000);
   };
-
-  const CopyIcon = ({ copied }: { copied: boolean }) =>
-    copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />;
 
   return (
     <Card>

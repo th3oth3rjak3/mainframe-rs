@@ -120,6 +120,8 @@ impl IUserRepository for SqlxUserRepository {
     }
 
     async fn create(&self, user: &User) -> Result<(), RepositoryError> {
+        let mut tx = self.pool.begin().await?;
+
         sqlx::query!(
             r#"INSERT INTO users (id, email, first_name, last_name, username, password_hash, password_expiration)
             VALUES (?, ?, ?, ?, ?, ?, ?)
@@ -132,8 +134,20 @@ impl IUserRepository for SqlxUserRepository {
             user.password_hash,
             user.password_expiration,
         )
-        .execute(&self.pool)
+        .execute(&mut *tx)
         .await?;
+
+        let role_ids = user.roles.iter().map(|r| r.id).collect::<Vec<_>>();
+
+        let mut builder = sqlx::QueryBuilder::new("INSERT INTO user_roles (user_id, role_id) ");
+        builder.push_values(role_ids, |mut b, role_id| {
+            b.push_bind(user.id).push_bind(role_id);
+        });
+
+        let query = builder.build();
+        query.execute(&mut *tx).await?;
+
+        tx.commit().await?;
 
         Ok(())
     }

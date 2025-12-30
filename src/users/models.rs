@@ -123,6 +123,7 @@ pub struct CreateUserRequest {
     pub raw_password: String,
     #[serde(with = "time::serde::rfc3339")]
     pub password_expiration: OffsetDateTime,
+    pub roles: Vec<Uuid>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, ToSchema, Validate)]
@@ -290,6 +291,7 @@ mod tests {
             username: "johndoe".to_string(),
             raw_password: "MyPass123!@".to_string(),
             password_expiration: OffsetDateTime::now_utc(),
+            roles: Vec::new(),
         }
     }
 
