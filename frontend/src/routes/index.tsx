@@ -1,4 +1,10 @@
-import { RouterProvider, createRouter, type RegisteredRouter } from "@tanstack/react-router";
+import {
+  RouterProvider,
+  createRoute,
+  createRouter,
+  notFound,
+  type RegisteredRouter,
+} from "@tanstack/react-router";
 import { rootRoute, type RouterContext } from "@/routes/root";
 import { publicLayoutRoute } from "@/routes/layouts/public.layout";
 import { signUpRoute } from "@/features/auth/routes/sign_up";
@@ -14,15 +20,27 @@ import { usersListRoute } from "@/features/users/routes/list.route";
 import { usersCreateRoute } from "@/features/users/routes/create.route";
 import { sessionsListRoute } from "@/features/sessions/routes/list.route";
 import { recipesListRoute } from "@/features/recipes/routes/list.route";
+import { administratorRoleRoute } from "./authorization/administrator.route";
+
+const catchAllProtectedLayoutRoute = createRoute({
+  getParentRoute: () => authenticatedLayoutRoute,
+  path: "/$",
+  loader: () => {
+    throw notFound();
+  },
+});
 
 const routeTree = rootRoute.addChildren([
   publicLayoutRoute.addChildren([loginRoute, signUpRoute, forgotPasswordRoute]),
   authenticatedLayoutRoute.addChildren([
+    catchAllProtectedLayoutRoute,
     dashboardRoute,
-    rolesListRoute,
     recipesListRoute,
-    usersBaseRoute.addChildren([usersListRoute, usersCreateRoute]),
-    sessionsListRoute,
+    administratorRoleRoute.addChildren([
+      rolesListRoute,
+      usersBaseRoute.addChildren([usersListRoute, usersCreateRoute]),
+      sessionsListRoute,
+    ]),
   ]),
 ]);
 
@@ -33,6 +51,9 @@ const router = createRouter({
   routeTree,
   context: {
     queryClient,
+  },
+  defaultNotFoundComponent: () => {
+    return <p>Oops, we couldn't find what you were looking for!</p>;
   },
 });
 

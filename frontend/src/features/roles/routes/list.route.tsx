@@ -1,8 +1,8 @@
 import { createRoute, lazyRouteComponent } from "@tanstack/react-router";
-import { authenticatedLayoutRoute } from "@/routes/layouts/protected.layout";
+import { administratorRoleRoute } from "@/routes/authorization/administrator.route";
 
 export const rolesListRoute = createRoute({
-  getParentRoute: () => authenticatedLayoutRoute,
+  getParentRoute: () => administratorRoleRoute,
   path: "/roles",
   component: lazyRouteComponent(() =>
     import("@/features/roles/pages/roles_list").then((m) => ({ default: m.default }))

@@ -35,4 +35,7 @@ export const authenticatedLayoutRoute = createRoute({
       <TanStackRouterDevtools position="bottom-right" />
     </ThemeProvider>
   ),
+  notFoundComponent: () => {
+    return <p>Oops, we couldn't find what you were looking for!</p>;
+  },
 });

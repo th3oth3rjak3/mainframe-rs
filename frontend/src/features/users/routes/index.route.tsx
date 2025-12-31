@@ -1,7 +1,7 @@
 import { createRoute } from "@tanstack/react-router";
-import { authenticatedLayoutRoute } from "@/routes/layouts/protected.layout";
+import { administratorRoleRoute } from "@/routes/authorization/administrator.route";
 
 export const usersBaseRoute = createRoute({
-  getParentRoute: () => authenticatedLayoutRoute,
+  getParentRoute: () => administratorRoleRoute,
   path: "/users",
 });

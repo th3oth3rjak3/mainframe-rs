@@ -52,9 +52,9 @@ export const httpClient = ky.create({
       async (_, _options, response) => {
         if (response.status === 401 && queryClient) {
           // Clear the user from cache on 401
-          queryClient.setQueryData(['user'], null);
+          queryClient.setQueryData(["user"], null);
         }
-      }
+      },
     ],
   },
 });

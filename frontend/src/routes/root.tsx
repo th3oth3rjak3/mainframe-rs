@@ -5,4 +5,8 @@ export type RouterContext = {
   queryClient: QueryClient;
 };
 
-export const rootRoute = createRootRouteWithContext<RouterContext>()();
+export const rootRoute = createRootRouteWithContext<RouterContext>()({
+  notFoundComponent: () => {
+    return <p>Oops, we couldn't find what you were looking for!</p>;
+  },
+});
