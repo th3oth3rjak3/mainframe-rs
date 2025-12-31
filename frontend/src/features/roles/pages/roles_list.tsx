@@ -1,11 +1,11 @@
-import { useRoleStore } from "@/features/roles/stores/role_store";
-import { useEffect } from "react";
 import type { Role } from "../types";
 import type { ColumnDef } from "@tanstack/react-table";
 import { DataTable } from "@/shared/ui/data_table";
 import { Button } from "@/shared/ui/button";
 import { ArrowUpDown } from "lucide-react";
 import { PageHeader } from "@/shared/ui/page_header";
+import { useQuery } from "@tanstack/react-query";
+import { getAllRolesQueryOptions } from "../queries";
 
 const columns: ColumnDef<Role>[] = [
   {
@@ -34,17 +34,12 @@ const columns: ColumnDef<Role>[] = [
 ];
 
 export default function RolesList() {
-  const initializeRoleStore = useRoleStore((state) => state.initialize);
-  const roles: Role[] = useRoleStore((state) => state.roles);
-
-  useEffect(() => {
-    initializeRoleStore();
-  }, [initializeRoleStore]);
+  const { data: roles } = useQuery(getAllRolesQueryOptions);
 
   return (
     <>
       <PageHeader title="Roles" description="All roles available in the system" />
-      <DataTable columns={columns} data={roles} showColumnSelector filterable />
+      <DataTable columns={columns} data={roles ?? []} showColumnSelector filterable />
     </>
   );
 }

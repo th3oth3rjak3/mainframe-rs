@@ -17,7 +17,7 @@ export function useLogin() {
         onSuccess: (user) => {
             // Update the user query cache
             queryClient.setQueryData(currentUserQueryOptions.queryKey, user);
-            navigate({ to: '/' }); // or wherever
+            navigate({ to: '/' });
         },
     });
 }

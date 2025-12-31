@@ -1,10 +1,9 @@
-import { useSessionStore } from "@/features/sessions/stores/session_store";
-import { useEffect, useState } from "react";
 import type { SessionSummary } from "../types";
 import { DataTable } from "@/shared/ui/data_table";
 import type { ColumnDef } from "@tanstack/react-table";
 import { PageHeader } from "@/shared/ui/page_header";
-import { toastErrorHandler } from "@/lib/error_handler";
+import { useQuery } from "@tanstack/react-query";
+import { getAllSessionsQueryOptions } from "../queries";
 
 const columns: ColumnDef<SessionSummary>[] = [
   {
@@ -51,19 +50,20 @@ const columns: ColumnDef<SessionSummary>[] = [
 ];
 
 export default function SessionsList() {
-  const [sessions, setSessions] = useState<SessionSummary[]>([]);
-  const getSessionSummaries = useSessionStore((store) => store.getSessionSummaries);
+  const { data: sessions, isLoading, isError, error } = useQuery(getAllSessionsQueryOptions);
 
-  useEffect(() => {
-    getSessionSummaries()
-      .then((summaries) => setSessions(summaries))
-      .catch((err) => toastErrorHandler(err, "failed to get sessions"));
-  }, [getSessionSummaries]);
+  if (isLoading) {
+    return <div>Loading sessions...</div>;
+  }
+
+  if (isError) {
+    return <div>Error fetching sessions: {error.message}</div>;
+  }
 
   return (
     <>
       <PageHeader title="Sessions" description="All active login sessions" />
-      <DataTable data={sessions} columns={columns} showColumnSelector filterable />
+      <DataTable data={sessions ?? []} columns={columns} showColumnSelector filterable />
     </>
   );
 }

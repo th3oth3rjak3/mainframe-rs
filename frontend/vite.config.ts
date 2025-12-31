@@ -12,47 +12,38 @@ export default defineConfig({
       output: {
         manualChunks: {
           // React core
-          'react-vendor': ['react', 'react-dom', 'react/jsx-runtime'],
+          "react-vendor": ["react", "react-dom", "react/jsx-runtime"],
 
           // TanStack suite
-          'tanstack-vendor': [
-            '@tanstack/react-router',
-            '@tanstack/react-query',
-            '@tanstack/react-table',
+          "tanstack-vendor": [
+            "@tanstack/react-router",
+            "@tanstack/react-query",
+            "@tanstack/react-table",
           ],
 
           // UI library - Radix UI components
-          'ui-vendor': [
-            'lucide-react',
-            '@radix-ui/react-dialog',
-            '@radix-ui/react-dropdown-menu',
-            '@radix-ui/react-label',
-            '@radix-ui/react-popover',
-            '@radix-ui/react-select',
-            '@radix-ui/react-separator',
-            '@radix-ui/react-slot',
-            '@radix-ui/react-tooltip',
-            '@radix-ui/react-checkbox',
+          "ui-vendor": [
+            "lucide-react",
+            "@radix-ui/react-dialog",
+            "@radix-ui/react-dropdown-menu",
+            "@radix-ui/react-label",
+            "@radix-ui/react-popover",
+            "@radix-ui/react-select",
+            "@radix-ui/react-separator",
+            "@radix-ui/react-slot",
+            "@radix-ui/react-tooltip",
+            "@radix-ui/react-checkbox",
           ],
 
           // Form/validation
-          'form-vendor': [
-            'react-hook-form',
-            'zod',
-          ],
+          "form-vendor": ["react-hook-form", "zod"],
 
           // Utilities
-          'utils-vendor': [
-            'date-fns',
-            'clsx',
-            'tailwind-merge',
-            'sonner',
-            'ky',
-          ],
+          "utils-vendor": ["date-fns", "clsx", "tailwind-merge", "sonner", "ky"],
         },
       },
     },
-    chunkSizeWarningLimit: 600,
+    chunkSizeWarningLimit: 300,
   },
   resolve: {
     alias: {

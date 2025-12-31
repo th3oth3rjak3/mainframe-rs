@@ -1,5 +1,3 @@
-import { useEffect, useState } from "react";
-import { useUserStore } from "../stores/user_store";
 import type { UserBase } from "../types";
 import type { ColumnDef } from "@tanstack/react-table";
 import { DataTable } from "@/shared/ui/data_table";
@@ -7,8 +5,9 @@ import { DataTable } from "@/shared/ui/data_table";
 import { Button } from "@/shared/ui/button";
 import { PlusCircle } from "lucide-react";
 import { PageHeader } from "@/shared/ui/page_header";
-import { toastErrorHandler } from "@/lib/error_handler";
 import { useNavigate } from "@tanstack/react-router";
+import { getAllUsersQueryOptions } from "../queries";
+import { useQuery } from "@tanstack/react-query";
 
 const columns: ColumnDef<UserBase>[] = [
   {
@@ -44,15 +43,8 @@ const columns: ColumnDef<UserBase>[] = [
 ];
 
 export default function UsersList() {
-  const getAllUsers = useUserStore((store) => store.getAllUsers);
-  const [users, setUsers] = useState<UserBase[]>([]);
+  const { data: users } = useQuery(getAllUsersQueryOptions);
   const navigate = useNavigate();
-
-  useEffect(() => {
-    getAllUsers()
-      .then((u) => setUsers(u))
-      .catch((err) => toastErrorHandler(err, "Error getting users"));
-  }, [getAllUsers]);
 
   return (
     <>
@@ -71,7 +63,7 @@ export default function UsersList() {
           </Button>
         }
       />
-      <DataTable data={users} columns={columns} showColumnSelector filterable />
+      <DataTable data={users ?? []} columns={columns} showColumnSelector filterable />
     </>
   );
 }
