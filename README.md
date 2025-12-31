@@ -1,7 +1,5 @@
 # Mainframe
 
-> **Note:** This repository is currently named **`mainframe-rs`** and will be renamed to **`mainframe`** once legacy code is migrated from an older repository.
-
 ## Overview
 
 Mainframe is a self-hosted web application focused on personal productivity for individuals, families, and small trusted groups. It aims to consolidate everyday tools—such as recipes, calendars, shared lists, and passwords—into a single, ad-free platform that prioritizes simplicity, control, and ease of use.
@@ -102,6 +100,7 @@ Planned capabilities:
 - Arbitrary list types (todos, shopping lists, notes, etc.)
 - Shared lists
 - Granular permissions:
+
   - View-only
   - Edit
   - Full control
