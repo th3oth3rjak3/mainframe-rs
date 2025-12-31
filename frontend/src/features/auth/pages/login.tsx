@@ -100,15 +100,7 @@ export function Login() {
                     control={form.control}
                     render={({ field, fieldState }) => (
                       <Field>
-                        <div className="flex items-center">
-                          <FieldLabel htmlFor="login-form-password">Password</FieldLabel>
-                          <Link
-                            to="/forgot-password"
-                            className="ml-auto inline-block text-sm underline-offset-4 hover:underline"
-                          >
-                            Forgot your password?
-                          </Link>
-                        </div>
+                        <FieldLabel htmlFor="login-form-password">Password</FieldLabel>
                         <Input
                           {...field}
                           id="login-form-password"
@@ -127,6 +119,12 @@ export function Login() {
             <Button type="submit" className="w-full hover:cursor-pointer" disabled={isLoading}>
               {isLoading ? "Logging in..." : "Login"}
             </Button>
+            <Link
+              to="/forgot-password"
+              className="ml-auto inline-block text-sm underline-offset-4 hover:underline"
+            >
+              Forgot your password?
+            </Link>
           </CardFooter>
         </Card>
       </div>
