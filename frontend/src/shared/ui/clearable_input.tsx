@@ -1,7 +1,7 @@
 import * as React from "react";
 import { cn } from "@/lib/utils";
-import { Input, type InputProps } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
+import { Input, type InputProps } from "@/shared/ui/input";
+import { Button } from "@/shared/ui/button";
 import { X } from "lucide-react";
 
 export interface ClearableInputProps extends InputProps {

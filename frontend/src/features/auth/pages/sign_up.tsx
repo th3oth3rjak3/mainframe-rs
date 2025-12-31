@@ -1,8 +1,8 @@
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/shared/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/ui/card";
 import { Toaster, toast } from "sonner";
 
-export default function SignUp() {
+export function SignUp() {
   const adminEmail = import.meta.env.VITE_ADMIN_EMAIL;
 
   const emailSubject = "Mainframe - New Account Sign-Up Request";

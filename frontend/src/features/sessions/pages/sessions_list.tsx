@@ -1,9 +1,9 @@
 import { useSessionStore } from "@/features/sessions/stores/session_store";
 import { useEffect, useState } from "react";
 import type { SessionSummary } from "../types";
-import { DataTable } from "@/components/ui/data_table";
+import { DataTable } from "@/shared/ui/data_table";
 import type { ColumnDef } from "@tanstack/react-table";
-import { PageHeader } from "@/components/ui/page_header";
+import { PageHeader } from "@/shared/ui/page_header";
 import { toastErrorHandler } from "@/lib/error_handler";
 
 const columns: ColumnDef<SessionSummary>[] = [

@@ -1,6 +1,6 @@
 import { ChevronRight } from "lucide-react";
-import { SidebarTrigger } from "@/components/ui/sidebar";
-import { useLocation, useNavigate } from "react-router-dom";
+import { SidebarTrigger } from "@/shared/ui/sidebar";
+import { useLocation, useNavigate } from "@tanstack/react-router";
 
 export function AppBar() {
   const location = useLocation();
@@ -31,7 +31,7 @@ export function AppBar() {
   const breadcrumbs = generateBreadcrumbs();
 
   const handleNavigation = (path: string) => {
-    navigate(path);
+    navigate({ to: path });
   };
 
   return (

@@ -1,6 +1,6 @@
+import type { QueryClient } from "@tanstack/react-query";
 import ky from "ky";
 import * as z from "zod";
-import { useAuthStore } from "@/features/auth/stores/auth_store";
 
 /**
  * Error response schema matching the backend ErrorResponse struct
@@ -10,6 +10,12 @@ export const ErrorResponseSchema = z.object({
 });
 
 export type ErrorResponse = z.infer<typeof ErrorResponseSchema>;
+
+let queryClient: QueryClient | null = null;
+
+export function setHttpClientQueryClient(client: QueryClient) {
+  queryClient = client;
+}
 
 /**
  * httpClient is used to make HTTP requests to the backend API.
@@ -44,8 +50,9 @@ export const httpClient = ky.create({
     ],
     afterResponse: [
       async (_, _options, response) => {
-        if (response.status === 401) {
-          useAuthStore.getState().clearUser();
+        if (response.status === 401 && queryClient) {
+          // Clear the user from cache on 401
+          queryClient.setQueryData(['user'], null);
         }
       }
     ],

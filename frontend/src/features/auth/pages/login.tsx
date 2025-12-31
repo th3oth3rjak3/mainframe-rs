@@ -1,4 +1,4 @@
-import { Button } from "@/components/ui/button";
+import { Button } from "@/shared/ui/button";
 import {
   Card,
   CardAction,
@@ -7,22 +7,22 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { useAuthStore } from "@/features/auth/stores/auth_store";
+} from "@/shared/ui/card";
+import { Input } from "@/shared/ui/input";
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { LoginRequestSchema, type LoginRequest } from "@/features/auth/types";
 import { toast } from "sonner";
 
-import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
+import { Field, FieldError, FieldGroup, FieldLabel } from "@/shared/ui/field";
 import { HTTPError } from "ky";
 import { toastErrorHandler } from "@/lib/error_handler";
+import { Link, useNavigate } from "@tanstack/react-router";
+import { useLogin } from "@/features/auth/queries";
 
-export default function Login() {
-  const login = useAuthStore((state) => state.login);
+export function Login() {
+  const login = useLogin();
   const navigate = useNavigate();
 
   const [isLoading, setIsLoading] = useState(false);
@@ -39,8 +39,8 @@ export default function Login() {
     setIsLoading(true);
 
     try {
-      await login(request);
-      navigate("/", { replace: true });
+      await login.mutateAsync(request);
+      navigate({ to: "/", replace: true });
     } catch (err) {
       if (err instanceof HTTPError) {
         if (err.response.status === 401) {

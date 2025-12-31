@@ -1,8 +1,8 @@
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/shared/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/ui/card";
 import { Toaster, toast } from "sonner";
 
-export default function ForgotPassword() {
+export function ForgotPassword() {
   const adminEmail = import.meta.env.VITE_ADMIN_EMAIL;
 
   const emailBody = "I'm unable to login to my account and need a password reset.";

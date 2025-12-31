@@ -2,12 +2,13 @@ import { useEffect, useState } from "react";
 import { useUserStore } from "../stores/user_store";
 import type { UserBase } from "../types";
 import type { ColumnDef } from "@tanstack/react-table";
-import { DataTable } from "@/components/ui/data_table";
-import { useNavigate } from "react-router-dom";
-import { Button } from "@/components/ui/button";
+import { DataTable } from "@/shared/ui/data_table";
+
+import { Button } from "@/shared/ui/button";
 import { PlusCircle } from "lucide-react";
-import { PageHeader } from "@/components/ui/page_header";
+import { PageHeader } from "@/shared/ui/page_header";
 import { toastErrorHandler } from "@/lib/error_handler";
+import { useNavigate } from "@tanstack/react-router";
 
 const columns: ColumnDef<UserBase>[] = [
   {
@@ -62,7 +63,7 @@ export default function UsersList() {
           <Button
             type="button"
             variant="outline"
-            onClick={() => navigate("/users/create")}
+            onClick={() => navigate({ to: "/users/create" })}
             className="inline-flex items-center gap-x-2"
           >
             <PlusCircle className="h-4 w-4" />

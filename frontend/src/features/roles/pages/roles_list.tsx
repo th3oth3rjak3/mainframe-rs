@@ -2,10 +2,10 @@ import { useRoleStore } from "@/features/roles/stores/role_store";
 import { useEffect } from "react";
 import type { Role } from "../types";
 import type { ColumnDef } from "@tanstack/react-table";
-import { DataTable } from "@/components/ui/data_table";
-import { Button } from "@/components/ui/button";
+import { DataTable } from "@/shared/ui/data_table";
+import { Button } from "@/shared/ui/button";
 import { ArrowUpDown } from "lucide-react";
-import { PageHeader } from "@/components/ui/page_header";
+import { PageHeader } from "@/shared/ui/page_header";
 
 const columns: ColumnDef<Role>[] = [
   {

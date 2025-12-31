@@ -13,29 +13,16 @@ import {
   type Table as TanstackTable,
 } from "@tanstack/react-table";
 
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/shared/ui/table";
 
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
   DropdownMenuContent,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown_menu";
+} from "@/shared/ui/dropdown_menu";
 
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/shared/ui/select";
 
 import {
   Card,
@@ -44,12 +31,12 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
+} from "@/shared/ui/card";
 
-import { Button } from "@/components/ui/button";
+import { Button } from "@/shared/ui/button";
 import { useEffect, useMemo, useState } from "react";
-import { Checkbox } from "./checkbox";
-import { ClearableInput } from "./clearable_input";
+import { Checkbox } from "@/shared/ui/checkbox";
+import { ClearableInput } from "@/shared/ui/clearable_input";
 
 interface DataTableProps<TData, TValue> {
   title?: string;

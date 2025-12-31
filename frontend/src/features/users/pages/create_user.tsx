@@ -1,21 +1,21 @@
-import { Button } from "@/components/ui/button";
+import { Button } from "@/shared/ui/button";
 import { Controller, useForm } from "react-hook-form";
 import { CreateUserRequestSchema, type CreateUserRequest } from "../types";
 import dayjs from "dayjs";
 import { useUserStore } from "../stores/user_store";
-import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
-import { Input } from "@/components/ui/input";
+import { Field, FieldError, FieldGroup, FieldLabel } from "@/shared/ui/field";
+import { Input } from "@/shared/ui/input";
 import { useEffect, useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { DatePicker } from "@/components/ui/date_picker";
-import { DataTable } from "@/components/ui/data_table";
+import { DatePicker } from "@/shared/ui/date_picker";
+import { DataTable } from "@/shared/ui/data_table";
 import { useRoleStore } from "@/features/roles/stores/role_store";
 import type { ColumnDef } from "@tanstack/react-table";
 import type { Role } from "@/features/roles/types";
 import { ArrowUpDown, RefreshCw } from "lucide-react";
 import { NewUserEmailTemplate } from "@/features/users/components/new_user_email_template";
 import { generateRandomPassword } from "@/features/auth/password_utilities";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/ui/card";
 import { toastErrorHandler } from "@/lib/error_handler";
 
 const columns: ColumnDef<Role>[] = [

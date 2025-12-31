@@ -10,20 +10,21 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-} from "@/components/ui/sidebar";
+} from "@/shared/ui/sidebar";
 
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown_menu";
-import { useAuthStore } from "@/features/auth/stores/auth_store";
+} from "@/shared/ui/dropdown_menu";
 import { AuthenticatedUser } from "@/features/auth/types";
 import { ROLES } from "@/features/roles/types";
 import { toast } from "sonner";
 import { ModeToggle } from "./mode_toggle";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation } from "@tanstack/react-router";
+import { currentUserQueryOptions, useLogout } from "@/features/auth/queries";
+import { useQuery } from "@tanstack/react-query";
 
 type Icon = typeof Home;
 
@@ -31,7 +32,7 @@ interface IMenuItem {
   title: string;
   url: string;
   icon: Icon;
-  canAccess: (user: AuthenticatedUser | null) => boolean;
+  canAccess: (user?: AuthenticatedUser | null) => boolean;
 }
 
 // Menu items.
@@ -46,26 +47,29 @@ const items: IMenuItem[] = [
     title: "Recipes",
     url: "/recipes",
     icon: Book,
-    canAccess: (user: AuthenticatedUser | null) =>
-      user !== null && (user.hasRole(ROLES.RecipeUser) || user.isAdmin),
+    canAccess: (user?: AuthenticatedUser | null) =>
+      user !== undefined && user !== null && (user.hasRole(ROLES.RecipeUser) || user.isAdmin),
   },
   {
     title: "Roles",
     url: "/roles",
     icon: BookLock,
-    canAccess: (user: AuthenticatedUser | null) => user !== null && user.isAdmin,
+    canAccess: (user?: AuthenticatedUser | null) =>
+      user !== undefined && user !== null && user.isAdmin,
   },
   {
     title: "Sessions",
     url: "/sessions",
     icon: Cookie,
-    canAccess: (user: AuthenticatedUser | null) => user !== null && user.isAdmin,
+    canAccess: (user?: AuthenticatedUser | null) =>
+      user !== undefined && user !== null && user.isAdmin,
   },
   {
     title: "Users",
     url: "/users",
     icon: User,
-    canAccess: (user: AuthenticatedUser | null) => user !== null && user.isAdmin,
+    canAccess: (user?: AuthenticatedUser | null) =>
+      user !== undefined && user !== null && user.isAdmin,
   },
 ];
 
@@ -75,12 +79,13 @@ type AppSidebarProps = {
 
 export default function AppSidebar({ variant }: AppSidebarProps) {
   const { pathname } = useLocation();
-  const logout = useAuthStore((state) => state.logout);
-  const user = useAuthStore((state) => state.user);
+  const logout = useLogout();
+
+  const { data: user } = useQuery(currentUserQueryOptions);
 
   const handleLogout = async () => {
     try {
-      await logout();
+      await logout.mutateAsync();
       toast.success("Logout Successful");
     } catch (error) {
       if (error instanceof Error) {
